@@ -15,7 +15,7 @@ def hud_names_lines() -> list[str]:
     """The file's lines. Read with pkgutil, not a path: Archipelago installs a .apworld as a zip."""
     data = pkgutil.get_data(__package__, HUD_NAMES_FILE)
     assert data is not None
-    return data.decode("utf-8").splitlines()
+    return data.decode("utf-8-sig").splitlines()     # utf-8-sig: a BOM from a spreadsheet save is dropped
 
 
 def load_hud_names() -> tuple[int, dict[str, str], dict[str, str]]:

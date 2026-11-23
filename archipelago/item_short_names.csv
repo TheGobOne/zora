@@ -1,4 +1,4 @@
-# version: 1
+# version: 2
 item,short,tiny
 Wood Sword,SWORD,
 White Sword,W SWORD,
@@ -9,12 +9,12 @@ Wooden Arrow,ARROWS,
 Silver Arrow,SILVERS,
 Magical Key,MAGIC KEY,M KEY
 Triforce of Power,TRIFORCE,
-5 Rupees,FIVER,
+5 Rupees,,
 Blue Ring,B RING,
 Red Ring,R RING,
 Power Bracelet,PB,
 Heart Container,HC,
-Triforce,TRI,
+Triforce,,
 Boomerang,BOOMER,
 Magical Boomerang,M BOOMER,
 Blue Potion,BLUE POT,
@@ -22,6 +22,8 @@ Red Potion,RED POT,
 Sword Upgrade,SWORD UP,
 Candle Upgrade,CANDLE UP,CNDL UP
 Arrow Upgrade,ARROW UP,
+Ring Upgrade,RING UP,
+Boomerang Upgrade,BOOMER UP,BMR UP
 Bomb Upgrade,BOMB UP,
 Boots Upgrade,BOOTS UP,
 Pegasus Boots,BOOTS,
@@ -31,6 +33,8 @@ Erdrick's Sword,E SWORD,
 Erdrick's Armor,E ARMOR,
 Stones of Sunlight,SUN STONES,SUNSTONE
 Magic Container,MAGIC CONT,M CONT
+Magic Key,M KEY,
+Small Key,KEY,
 Blue Magic Jar,BLUE JAR,
 Red Magic Jar,RED JAR,
 Piece of Heart,HEART PIECE,HEART PC

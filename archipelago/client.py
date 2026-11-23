@@ -139,7 +139,7 @@ class ZoraClient(BizHawkClient):
             return False
         self.ap_name = identity.ap_name
         self.memory = zora_ap.NO_MEMORY
-        self.hud_reset()                    # messages for the last game must not show on this ROM
+        self.hud_restart()                  # messages for the last game must not show on this ROM
         ctx.game = self.game
         ctx.items_handling = 0b111
         ctx.want_slot_data = True
@@ -168,8 +168,8 @@ class ZoraClient(BizHawkClient):
     HUD_SECONDS_BUSY = 5.0      # each message's time while HUD_BUSY_AT or more are pending
     HUD_BUSY_AT = 4             # pending messages, the one going up included: 3 or fewer get 10 s, more get 5 s
     HUD_REDRAW = 1.0            # written again this often while shown, in case a screen change wiped it
-    # A blank is written this many times, HUD_REDRAW apart: a write can be lost (the game's status-bar
-    # redraw can take the buffer that frame), and a lost blank left a line up until a screen change.
+    # A blank is written this many times, HUD_REDRAW apart. No lost write was seen in FCEUX
+    # (2026-11-23); the extra blanks are cheap insurance against a screen change redrawing the row.
     HUD_BLANK_WRITES = 3
 
     def on_package(self, ctx: BizHawkClientContext, cmd: str, args: dict) -> None:
@@ -269,6 +269,13 @@ class ZoraClient(BizHawkClient):
                 return cls.hud_shown(short)
         return cls.hud_fit(cls.HUD_SHORT_NAMES.get(name, name), room) or "ITEM"
 
+    def hud_restart(self) -> None:
+        """Drop every queued line, but blank a line still on screen at once instead of leaving it up."""
+        on_screen = self.hud_dirty or self.hud_text is not None
+        self.hud_reset()
+        if on_screen:
+            self.hud_dirty, self.hud_drawn_at = True, float("-inf")
+
     def hud_reset(self) -> None:
         self.hud_messages: list = []        # (text, kind): kind is a key of HUD_ORDER
         self.hud_burst = False              # items given again are being given; their line is queued
@@ -310,46 +317,49 @@ class ZoraClient(BizHawkClient):
             words.pop()
         return " ".join(words)
 
+    # The guards hud_write tries, one per frame, by GameMode ($12). In play and cellars the game
+    # queues its status-bar redraw (20 B6 08) every second frame, so the buffer alternates between
+    # empty and the redraw. Each guarded_write is one round trip, answered one frame apart, so a
+    # fixed order of guards only lands when the call starts on the right frame: with an even call
+    # period on the wrong frame, every call failed and a line stayed up until a cave (FCEUX test,
+    # 2026-11-23). Each list below lands from either frame.
+    HUD_EMPTY: ClassVar[list] = [(0x0302, [0xFF], RAM), (0x0301, [0], RAM)]
+    HUD_REDRAWN: ClassVar[list] = [(0x0302, [0x20, 0xB6, 0x08], RAM)]
+    # Play: $13=0 too. Cellars (mode 9) play with GameSubmode left at its last init step, so not
+    # $13. With the Item Counter on, its record (20 8B 04) fills the other frames, and the redraw
+    # frames are the way in. Mode $A, the way out of a cellar, never updates.
+    # Caves (modes $B, $C) take only the redraw's frames: a typed character of cave text starts
+    # differently and is never replaced, so a line can wait out the typing (about 120 frames).
+    # Replacing the redraw is harmless: the game sends it again two frames later.
+    # MenuState ($E1) 0 everywhere: while the Start submenu scrolls or is open, the game queues its
+    # own rows to nametable 2, so a line waits until the submenu is closed.
+    HUD_PLAY: ClassVar[list] = [(0x12, [5], RAM), (0x13, [0], RAM), (0x11, [1], RAM), (0x14, [0], RAM),
+                                (0xE1, [0], RAM)]
+    HUD_TRIES: ClassVar[dict[int, list]] = {
+        0x05: [HUD_PLAY + HUD_EMPTY, HUD_PLAY + HUD_REDRAWN, HUD_PLAY + HUD_REDRAWN],
+        **{mode: [[(0x12, [mode], RAM), (0x11, [1], RAM), (0x14, [0], RAM), (0xE1, [0], RAM)] + buffer
+                  for buffer in buffers]
+           for mode, buffers in ((0x09, (HUD_EMPTY, HUD_REDRAWN, HUD_REDRAWN)),
+                                 (0x0B, (HUD_REDRAWN, HUD_REDRAWN)),
+                                 (0x0C, (HUD_REDRAWN, HUD_REDRAWN)))},
+    }
+
     async def hud_write(self, ctx: BizHawkClientContext, text: str) -> bool:
         """Write text (blank for "") into the HUD row; False if the game was not ready this tick."""
-        from worlds._bizhawk import guarded_write
+        from worlds._bizhawk import guarded_write, read
 
+        (mode,) = await read(ctx.bizhawk_ctx, [(0x12, 1, RAM)])
+        tries = self.HUD_TRIES.get(mode[0])
+        if not tries:
+            return False
         text = text[:self.HUD_WIDTH]
         text = " " * ((self.HUD_WIDTH - len(text)) // 2) + text      # centered in the row
         tiles = [CHAR_TO_BYTE.get(c, CHAR_TO_BYTE[" "]) for c in text]
         tiles += [CHAR_TO_BYTE[" "]] * (self.HUD_WIDTH - len(tiles))
         record = [self.HUD_ROW >> 8, self.HUD_ROW & 0xFF, self.HUD_WIDTH, *tiles, 0xFF]
         writes = [(0x0302, record, RAM), (0x0301, [len(record) - 1], RAM)]
-        if await guarded_write(
-                ctx.bizhawk_ctx, writes,
-                [(0x12, [5], RAM), (0x13, [0], RAM), (0x11, [1], RAM), (0x14, [0], RAM), (0x0302, [0xFF], RAM),
-                 (0x0301, [0], RAM)]):
-            return True
-        # In play the game also queues the status-bar redraw every second frame, which fails the
-        # empty-buffer guard above on those frames. Its first record (20 B6 08) is the blank row
-        # above the hearts. Replace the redraw, as in caves below.
-        if await guarded_write(
-                ctx.bizhawk_ctx, writes,
-                [(0x12, [5], RAM), (0x13, [0], RAM), (0x11, [1], RAM), (0x14, [0], RAM),
-                 (0x0302, [0x20, 0xB6, 0x08], RAM)]):
-            return True
-        # Cellars (mode 9) play with GameSubmode left at its last init step (9), so they need their
-        # own guards: updating ($11=1) with an empty buffer, or in place of the status-bar redraw
-        # below. With the Item Counter on, its record (20 8B 04) fills the other frames, so the
-        # buffer is never empty there. Mode $A, the way out, never updates.
-        if await guarded_write(
-                ctx.bizhawk_ctx, writes,
-                [(0x12, [0x09], RAM), (0x11, [1], RAM), (0x14, [0], RAM), (0x0302, [0xFF], RAM), (0x0301, [0], RAM)]):
-            return True
-        # Caves (modes $B, $C) and cellars take the frames with the status-bar redraw (every
-        # second frame, starting 20 B6 08, alone in the buffer; $0301 stays 0). Replacing it is
-        # harmless: the game sends it again two frames later. A typed character of cave text
-        # starts differently and is never replaced, but on some cave entries it takes the
-        # redraw's frames, so a line can wait out the typing (about 120 frames).
-        for mode in (0x09, 0x0B, 0x0C):
-            if await guarded_write(
-                    ctx.bizhawk_ctx, writes,
-                    [(0x12, [mode], RAM), (0x11, [1], RAM), (0x14, [0], RAM), (0x0302, [0x20, 0xB6, 0x08], RAM)]):
+        for guards in tries:
+            if await guarded_write(ctx.bizhawk_ctx, writes, guards):
                 return True
         return False
 
@@ -392,8 +402,11 @@ class ZoraClient(BizHawkClient):
                 logger.warning(f"ZORA: could not write an item message; trying again: {message}")
 
     async def game_watcher(self, ctx: BizHawkClientContext) -> None:
-        await self.zora_game_watcher(ctx)
-        if ctx.server is not None and ctx.slot_data is not None:
+        # The HUD ticks even when the watcher raises or the server is gone, so a line on screen
+        # still times out and is blanked.
+        try:
+            await self.zora_game_watcher(ctx)
+        finally:
             await self.hud_tick(ctx)
 
     async def set_auth(self, ctx: BizHawkClientContext) -> None:

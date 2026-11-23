@@ -2,6 +2,7 @@
 is updated (the HUD would otherwise show the new name in full, with no short form)."""
 import csv
 import unittest
+from unittest import mock
 
 from ..hud_names import hud_names_lines, load_hud_names
 from ..zora.model.item_names import ITEM_NAMES
@@ -25,3 +26,12 @@ class HudNamesTest(unittest.TestCase):
         _, short, tiny = load_hud_names()
         for item, name in tiny.items():
             self.assertLessEqual(len(name), len(short.get(item, item)), item)
+
+    def test_a_bom_is_ignored(self):
+        """A spreadsheet save can add a BOM; the world must still load."""
+        import pkgutil
+        data = pkgutil.get_data(__package__.rsplit(".", 1)[0], "item_short_names.csv")
+        with mock.patch("pkgutil.get_data", return_value=bytes([0xEF, 0xBB, 0xBF]) + data):
+            version, short, _ = load_hud_names()
+        self.assertGreaterEqual(version, 1)
+        self.assertEqual(short["Boomerang Upgrade"], "BOOMER UP")

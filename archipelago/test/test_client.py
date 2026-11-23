@@ -345,7 +345,9 @@ class TestHudMessages(unittest.TestCase):
         async def guarded_write(_ctx, writes, _guards):
             written.append(writes)
             return True
-        fake = types.SimpleNamespace(guarded_write=guarded_write)
+        async def read(_ctx, _reads):
+            return [bytes([5])]
+        fake = types.SimpleNamespace(guarded_write=guarded_write, read=read)
         with mock.patch.dict(sys.modules, {"worlds._bizhawk": fake}):
             asyncio.run(self.client.hud_write(self.ctx, "GOT RAFT"))
         record = written[0][0][1]
@@ -391,7 +393,7 @@ class TestHudWrite(unittest.TestCase):
 
     def write(self, ram: list[int], text: str = "GOT RAFT") -> tuple[bool, Console]:
         console = Console(ram)
-        with mock.patch("worlds._bizhawk.guarded_write", console.guarded_write):
+        with mock.patch("worlds._bizhawk.guarded_write", console.guarded_write),                 mock.patch("worlds._bizhawk.read", console.read):
             done = asyncio.run(self.client.hud_write(self.ctx, text))
         return done, console
 
@@ -470,6 +472,56 @@ class TestHudWrite(unittest.TestCase):
         self.assertTrue(done)
         self.assertEqual(console.ram[0x0302 + 31], 0xFF)
 
+    def test_the_start_submenu_waits(self) -> None:
+        """MenuState ($E1) nonzero: the submenu is scrolling or open and queues its own rows."""
+        for mode, buffer in ((5, None), (5, STATUS_REDRAW), (0x09, None), (0x0B, STATUS_REDRAW)):
+            with self.subTest(mode=mode, redraw=buffer is not None):
+                ram = hud_ram(mode, buffer=buffer)
+                ram[0xE1] = 7
+                self.assert_refused(ram)
+
+    def test_a_call_lands_from_either_frame(self) -> None:
+        """Each request is answered one frame apart, and the buffer alternates between empty and the
+        status-bar redraw. A call lands on its first try whichever frame it starts on (a fixed guard
+        order failed every call on the wrong frame and left a line up until a cave)."""
+        def empty(ram: list[int]) -> None:
+            ram[0x0302:0x0302 + len(STATUS_REDRAW)] = [0xFF] + [0] * (len(STATUS_REDRAW) - 1)
+            ram[0x0301] = 0
+
+        def redraw(ram: list[int]) -> None:
+            ram[0x0302:0x0302 + len(STATUS_REDRAW)] = STATUS_REDRAW
+            ram[0x0301] = 0
+
+        for mode, frames in ((5, (empty, redraw)), (0x09, (empty, redraw)),
+                             (0x0B, (redraw, empty)), (0x0C, (redraw, empty))):
+            for first in (0, 1):
+                with self.subTest(mode=mode, first=first):
+                    console = FrameConsole(hud_ram(mode, submode=9 if mode == 9 else 0), frames, first)
+                    with mock.patch("worlds._bizhawk.guarded_write", console.guarded_write),                             mock.patch("worlds._bizhawk.read", console.read):
+                        self.assertTrue(asyncio.run(self.client.hud_write(self.ctx, "GOT RAFT")))
+                    self.assertEqual(console.ram[0x0302:0x0305], [0x20, 0x22, 28])
+
+
+class FrameConsole(Console):
+    """A Console that answers each request on the next frame, the buffer set by `frames` in turn."""
+
+    def __init__(self, ram: list[int], frames: tuple, first: int) -> None:
+        super().__init__(ram)
+        self.frames, self.frame = frames, first
+
+    def next_frame(self) -> None:
+        self.frames[self.frame % len(self.frames)](self.ram)
+        self.frame += 1
+
+    async def read(self, ctx: Any, reads: list[tuple[int, int, str]]) -> list[bytes]:
+        self.next_frame()
+        return await super().read(ctx, reads)
+
+    async def guarded_write(self, ctx: Any, writes: list[tuple[int, list[int], str]],
+                            guards: list[tuple[int, list[int], str]]) -> bool:
+        self.next_frame()
+        return await super().guarded_write(ctx, writes, guards)
+
 
 class TestHudTiming(unittest.TestCase):
     """hud_tick: how long each line stays, the redraw while shown, the blank after, and retries."""
@@ -480,6 +532,7 @@ class TestHudTiming(unittest.TestCase):
         self.console = Console(hud_ram(5))
         self.now = 100.0
         patches = (mock.patch("worlds._bizhawk.guarded_write", self.console.guarded_write),
+                   mock.patch("worlds._bizhawk.read", self.console.read),
                    mock.patch("time.monotonic", lambda: self.now))
         for patch in patches:
             patch.start()
@@ -607,3 +660,29 @@ class TestHudTiming(unittest.TestCase):
         self.assertEqual(len(logs.records), 1)
         self.tick_at(0.2)
         self.assertEqual(self.client.hud_text, "GOT RAFT")
+
+    def test_the_hud_ticks_when_the_game_watcher_raises(self) -> None:
+        """A line on screen still times out and is blanked if the rest of the watcher fails."""
+        self.queue("GOT RAFT")
+        self.tick_at(0)
+
+        async def fails(_ctx: Any) -> None:
+            raise RuntimeError("watcher")
+        self.client.zora_game_watcher = fails
+        self.now = 110.0
+        self.console.ram[0x0302], self.console.ram[0x0301] = 0xFF, 0    # the NMI emptied the buffer
+        with self.assertRaises(RuntimeError):
+            asyncio.run(self.client.game_watcher(self.ctx))
+        self.assertIsNone(self.client.hud_text)
+        self.assertEqual(self.console.writes, 2)            # the blank went out
+
+    def test_a_reset_keeps_a_line_on_screen_to_blank(self) -> None:
+        """validate_rom's hud_restart drops the queue, but a line still up is blanked, not left."""
+        self.queue("GOT RAFT", "GOT BOW")
+        self.tick_at(0)
+        self.client.hud_restart()
+        self.tick_at(0.1)
+        self.assertEqual(self.client.hud_queue(), [])
+        self.assertEqual(self.console.writes, 2)            # blanked at once
+        from ..zora.rom.text_encoding import CHAR_TO_BYTE
+        self.assertEqual(self.console.ram[0x0305:0x0305 + 28], [CHAR_TO_BYTE[" "]] * 28)
