@@ -410,7 +410,7 @@ def item_shuffle_options(context: GenerationContext) -> ItemShuffleOptions:
     price their wares by (steps/shop_prices.py)."""
     alternatives = context.settings.alternatives
     return ItemShuffleOptions(dungeon_hearts=alternatives.item_deal is ItemShuffleScope.FULL,
-                              minor_items=alternatives.minor_dungeon_drops,
+                              minor_items=alternatives.minor_dungeon_drops and alternatives.minor_drops_dealt,
                               set_sources=context.set_sources,
                               armos_item=alternatives.armos_pin, white_sword_item=alternatives.white_sword_pin,
                               coast_item=alternatives.coast_pin, level_9_items=alternatives.level_9_pins,
@@ -941,7 +941,8 @@ def oops_all_step(context: GenerationContext) -> None:
 
 
 # The ZORA extras join the pool after every pass that reads $03 as "no item"
-# (docs/zora-extras.md section 3); neither is a tracked item.
+# (docs/zora-extras.md section 3); a joined sword is a tracked item whenever the walk counts swords
+# (sword_is_tracked), the letter never.
 
 def level_9_gate_step(context: GenerationContext) -> None:
     """Level 9 Entry (C08; FP-TRIF-02 to FP-TRIF-06): what this attempt's entrance asks for, before
@@ -949,11 +950,20 @@ def level_9_gate_step(context: GenerationContext) -> None:
     context.level_9_gate = draw_level_9_gate(context.settings.alternatives.level_9_entry, context.rng)
 
 
+def sword_is_tracked(context: GenerationContext) -> bool:
+    """Whether a joined sword (Randomize Magical Sword's, Add L4 Sword = Level 2's) gets a tracked record: whenever
+    the walk counts swords (LogicRules.counts_swords: Level 9 Entrance = Level 4 sword, or Offense Item Pacing), as
+    the logic model's Sword line counts it wherever it lies. Until 2.0.2 only the first: under Offense Item Pacing
+    alone the walk never counted the joined sword, so it judged seeds by fewer swords than Link has
+    (check_apworld seed 13, 2026-11-22; FINISH's rebuild_tracking does the same for Archipelago's placements)."""
+    return context.settings.extras.level_9_entrance_sword or context.logic_rules.counts_swords
+
+
 def randomize_magical_sword_step(context: GenerationContext) -> None:
     assert context.overworld is not None
     randomize_magical_sword(context.sets.levels, context.item_shuffle_result, context.extra_pool_items,
                             context.overworld, context.rng, item_shuffle_options(context),
-                            tracked=context.settings.extras.level_9_entrance_sword)
+                            tracked=sword_is_tracked(context))
 
 
 def randomize_letter_step(context: GenerationContext) -> None:
@@ -991,9 +1001,9 @@ def shuffle_blue_potion_step(context: GenerationContext) -> None:
 
 def join_level_2_sword_step(context: GenerationContext) -> None:
     """Add L4 Sword = Level 2 (docs/design/asnb.md section 4): level 2's cellar sword joins the
-    pool, after the other joins; tracked with Level 9 Entrance = Level 4 sword."""
+    pool, after the other joins; tracked whenever the walk counts swords (sword_is_tracked)."""
     join_level_2_sword(context.sets.levels, context.item_shuffle_result, context.extra_pool_items, context.rng,
-                       tracked=context.settings.extras.level_9_entrance_sword, opts=item_shuffle_options(context))
+                       tracked=sword_is_tracked(context), opts=item_shuffle_options(context))
 
 
 def add_l4_sword_step(context: GenerationContext) -> None:
@@ -1207,17 +1217,17 @@ def generate_hint_text_step(context: GenerationContext) -> None:
 
 def compose_hint_text(gw: GameWorld, item_shuffle_result: ItemShuffleResult, hint_assignment: HintAssignmentResult,
                       rng: Rng, extras: ExtraOptions, alternatives: AlternativeValues,
-                      maze_offers: dict[int, MazeOffer], foreign_code: int | None = None,
+                      maze_offers: dict[int, MazeOffer], foreign_codes: frozenset[int] = frozenset(),
                       foreign_labels: tuple[tuple[int | str, str, str], ...] = ()) -> HintTextResult:
     """The hint text step's work on a shipped world: also FINISH's, on an assigned world
-    (Archipelago Phase 2), which passes foreign_code, the code another player's item is written
-    as, so that a hint naming such a place says so (ItemNames.foreign_code)."""
+    (Archipelago Phase 2), which passes foreign_codes, the codes another player's item is written
+    as, so that a hint naming such a place says so (ItemNames.foreign_codes)."""
     # PI-TEXT-01: with Progressive Items on, the texts name upgrade-line items by their line
     names = PROGRESSIVE_NAMES if extras.progressive_items else VANILLA_NAMES
     if alternatives.wooden_sword_state in BOMB_UPGRADE_STATES:
         names = replace(names, bomb_upgrade=True)       # FP-WOOD-02: item $02 is a bomb upgrade
-    if foreign_code is not None:
-        names = replace(names, foreign_code=foreign_code, foreign_labels=foreign_labels)
+    if foreign_codes:
+        names = replace(names, foreign_codes=foreign_codes, foreign_labels=foreign_labels)
     if extras.pegasus_boots:
         names = replace(names, pegasus_boots=True)      # the boomerangs' items are the boots
     if alternatives.normal_hints:
@@ -1230,7 +1240,8 @@ def compose_hint_text(gw: GameWorld, item_shuffle_result: ItemShuffleResult, hin
     return generate_hint_text(gw, item_shuffle_result, hint_assignment, rng, names, maze_offers,
                               extras.gates, every_helpful_hint=alternatives.show_every_helpful_hint,
                               book_needed=alternatives.book_to_understand_npcs,
-                              deceive=alternatives.deception_hints, mirrored=alternatives.mirror_overworld)
+                              deceive=alternatives.deception_hints, mirrored=alternatives.mirror_overworld,
+                              maps_compasses_pooled=extras.add_maps_compasses_to_pool)
 
 
 def shuffle_dungeon_text_step(context: GenerationContext) -> None:

@@ -279,9 +279,16 @@ def draws_boots(rom: bytes) -> bool:
     return rom[BOOMERANG_FRAME_OFFSET] == BOOT_FRAME_ENTRY
 
 
+# The seed's code shows items through the game's ItemIdToSlot and ItemIdToDescriptor, which end at $23:
+# an extended item code ($24 and up, asm/flags2/ap-items) would read the next table's bytes.
+FIRST_EXTENDED_CODE = 0x24
+
+
 def seed_code_values(rom: bytes) -> bytes:
     """The seed's code as the four item values, in screen order."""
-    return rom[SEED_CODE_ADDRESS:SEED_CODE_ADDRESS + SEED_CODE_LENGTH]
+    values = rom[SEED_CODE_ADDRESS:SEED_CODE_ADDRESS + SEED_CODE_LENGTH]
+    assert max(values) < FIRST_EXTENDED_CODE, f"an extended item code in the seed's code: {values.hex()}"
+    return values
 
 
 def seed_code(rom: bytes) -> tuple[str, ...]:

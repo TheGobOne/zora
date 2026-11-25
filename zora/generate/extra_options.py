@@ -78,10 +78,24 @@ class ExtraOptions:
     # (zora_flags.swaps_swords_and_rings), Swordlish's N (0: off) and the starting pieces its walk counts
     swap_swords_and_rings: bool = False
     swordlish_pieces: int = 0
+    # Bomb Upgrades in the Item Pool (docs/design/archipelago-items.md piece 8; Multiworld only): the selling bomb
+    # upgraders' rooms are places holding the Bomb Upgrade
+    bomb_upgrades_in_pool: bool = False
     start_triforce_pieces: int = 0
     # Wizzrobes Shoot Wallmasters, resolved: the deal puts the Wizzrobes in the Wallmasters' dungeon group
     # (steps/shuffle_enemy_groups.py)
     wizzrobes_shoot_wallmasters: bool = False
+    # Not a ZORA extra: Shuffle Minor Dungeon Drops (B17, PS-ITEM-14), resolved. Its bombs, five rupees and
+    # keys are item places too (places.item_pool; docs/design/archipelago-items.md piece 3)
+    minor_dungeon_drops: bool = False
+    # Add Triforces / Maps/Compasses to the Item Pool (ZORA version 23, resolved; docs/design/
+    # archipelago-items.md pieces 6 and 7): the levels' pieces, maps and compasses are places and pool items
+    add_triforces_to_pool: bool = False
+    add_maps_compasses_to_pool: bool = False
+
+    @property
+    def per_level_items(self) -> bool:
+        return self.add_triforces_to_pool or self.add_maps_compasses_to_pool
 
     @property
     def oops_all(self) -> bool:

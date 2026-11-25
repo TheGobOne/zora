@@ -12,8 +12,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from .fields import THREE_STATE_LABELS, TOGGLES_BY_ID, Settings, ThreeState
+from .fields import OPTIONS_BY_ID, THREE_STATE_LABELS, TOGGLES_BY_ID, Settings, ThreeState
 from .zora_flags import (
+    ADD_MAPS_COMPASSES_FIELD,
+    ADD_TRIFORCES_FIELD,
+    BOMB_UPGRADES_FIELD,
     DETAILED_SPOILER_LOG_FIELD,
     ENUM_FIELDS,
     HEARTS_CAP_CHOICES,
@@ -299,6 +302,33 @@ WIZZROBE_HAND_ROW = {
              "dungeon group (never the overworld's) with the Wallmasters. Not with Oops All Enemies: "
              "Wizzrobes. Idea by Ultralavos.")}
 FIELDS = (*FIELDS, WIZZROBE_HAND_ROW)
+# Version 23: the level items' pool switches (docs/design/archipelago-items.md pieces 6 and 7), On / Off / ?, in
+# single-player and in Multiworld games.
+LEVEL_ITEM_POOL_ROWS = (
+    {"name": ADD_TRIFORCES_FIELD, "kind": THREE_STATE_KIND, "label": "Add Triforces to the Item Pool",
+     "help": ("Each level's Triforce piece is an item of its own, \"Level N Triforce\", shuffled with the other "
+              "items as far as Item Shuffle reaches: within its own level under Within each dungeon, anywhere "
+              "under Dungeon items only and Full (in Archipelago, into any world). A Triforce room holds whatever "
+              "was placed there. Taking a piece refills Link's hearts and the level goes on. Level 9 opens on the "
+              "pieces it asks for, wherever they were found. No effect with Item Shuffle: None.")},
+    {"name": ADD_MAPS_COMPASSES_FIELD, "kind": THREE_STATE_KIND, "label": "Add Maps/Compasses to the Item Pool",
+     "help": ("Each level's map and compass are items of their own, \"Level N Map\" and \"Level N Compass\", "
+              "shuffled with the other items as far as Item Shuffle reaches (in Archipelago, into any world). Each "
+              "shows its level's number and works for that level wherever it was found. No effect with Item "
+              "Shuffle: None.")},
+)
+FIELDS = (*FIELDS, *LEVEL_ITEM_POOL_ROWS)
+# Also version 23: Bomb Upgrades in the Item Pool (docs/design/archipelago-items.md piece 8). Multiworld only
+# (zora_flags.MULTIWORLD_ONLY_FIELDS): the page shows its row only in its Multiworld mode.
+BOMB_UPGRADES_ROWS = (
+    {"name": BOMB_UPGRADES_FIELD, "kind": "toggle", "label": "Bomb Upgrades in the Item Pool",
+     "multiworldOnly": True,
+     "help": ("The two bomb upgraders are locations: each shows the item Archipelago placed with him where his rupee "
+              "lies, and sells it once for his price. His own two 'Bomb Upgrade' items go into the pool: each "
+              "raises Link's bomb capacity, wherever it is found, as the upgraders do.")},
+)
+FIELDS = (*FIELDS, *BOMB_UPGRADES_ROWS)
+LEVEL_ITEM_POOL_ROWS_NAMES = (ADD_TRIFORCES_FIELD, ADD_MAPS_COMPASSES_FIELD)
 FIELD_NAMES = tuple(field["name"] for field in FIELDS)
 
 
@@ -348,11 +378,23 @@ RECORDER_WARPING_UNAVAILABLE = ("Recorder Warping does nothing until both Record
                                 "to New Dungeons are on.")
 
 
+# The level items' pool switches act under every Item Shuffle but None (docs/design/archipelago-items.md piece 7,
+# decision 21). Not a conflict: Item Shuffle: Random may draw None in a seed whose switches are On.
+ITEM_SHUFFLE_FIELD = OPTIONS_BY_ID["C06"]
+ITEM_SHUFFLE_NONE = 0
+LEVEL_ITEM_POOL_UNAVAILABLE = "No effect: Item Shuffle is None."
+
+
 def unavailable_fields(z1r: Settings | None) -> list[dict[str, str]]:
     """The ZORA settings that do nothing under these Z1R settings, each with its note."""
-    if z1r is None or all(z1r.toggle(toggle) is ThreeState.ON for toggle in RECORDER_WARPING_NEEDS):
+    if z1r is None:
         return []
-    return [{"field": "recorder_warping", "message": RECORDER_WARPING_UNAVAILABLE}]
+    found = []
+    if not all(z1r.toggle(toggle) is ThreeState.ON for toggle in RECORDER_WARPING_NEEDS):
+        found.append({"field": "recorder_warping", "message": RECORDER_WARPING_UNAVAILABLE})
+    if z1r.option(ITEM_SHUFFLE_FIELD) == ITEM_SHUFFLE_NONE:
+        found += [{"field": name, "message": LEVEL_ITEM_POOL_UNAVAILABLE} for name in LEVEL_ITEM_POOL_ROWS_NAMES]
+    return found
 
 
 def zora_state(zora_flag_string: str, z1r: Settings | None) -> dict[str, Any]:

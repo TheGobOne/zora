@@ -23,6 +23,15 @@
     },
     "item_counter": {
       "beta": "all"
+    },
+    "add_triforces_to_pool": {
+      "beta": "all"
+    },
+    "add_maps_compasses_to_pool": {
+      "beta": "all"
+    },
+    "bomb_upgrades_in_pool": {
+      "beta": "all"
     }
   }
 }

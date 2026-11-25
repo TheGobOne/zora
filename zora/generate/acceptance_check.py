@@ -34,6 +34,7 @@ from ..flags.fields import WoodenSwordState
 from ..flags.zora_flags import Pacing
 from ..model.enums import Destination, Item, RoomType
 from ..model.level_9_gate import EIGHT_PIECES, TRIFORCE_LEVELS, GateKind, Level9Gate
+from ..model.level_items import LevelItemKind, level_item
 from ..model.levels import GANON_LIST, LEVEL_9, ZELDA_LIST, Level
 from ..model.overworld import Overworld, Shop
 from .dungeon_walk import (
@@ -200,6 +201,14 @@ class LogicRules:
     # completed, each level once; or once the white sword is held, as under No Wood Sword
     swordlish_pieces: int = 0
     start_triforce_pieces: int = 0
+    # Add Triforces to the Item Pool in FINISH's sanity check (docs/design/archipelago-items.md piece 6): a
+    # level 1-8 is completed once its own piece (level_items) is held, wherever it was found, not by reaching
+    # its Triforce room. Never in generation, whose acceptance check sees the pieces where BUILD put them.
+    triforces_as_items: bool = False
+    # Per-level mode in FINISH's sanity check, either pool switch on (piece 6): FINISH has written each level's
+    # piece as its own code (level_items), so a level's Triforce room is the one holding that code. With Add
+    # Maps/Compasses alone the pieces stay events; this keeps the walk finding them.
+    per_level_codes: bool = False
     # Which walk (dungeon_walk.WalkRules): VA-REJ-17/18's in generation (ZORA mode and the
     # original randomizer's validator); the logic walk only for Archipelago's rules and FINISH's
     # sanity check (logic_walk_rules)
@@ -456,11 +465,20 @@ class AcceptanceCheck:
         cellar = item_cellar(self._level(level), item)
         return cellar is not None and self.reaches_cellar(level, cellar, held)
 
+    def level_completed(self, level: int, held: frozenset[int]) -> bool:
+        """The closure's completed level: entered and its Triforce reached, or with triforces_as_items (a
+        level 1-8) its own piece held."""
+        if self.rules.triforces_as_items and level in TRIFORCE_LEVEL_SET:
+            return level_item(LevelItemKind.TRIFORCE, level) in held
+        return self.can_enter(level, held) and self.completes(level, held)
+
     def completes(self, level: int, held: frozenset[int]) -> bool:
         """The level's Triforce is reached (entry aside): the room holding it, or with Allow
         Triforces in Stairways the item cellar holding it, once the walk enters that cellar from
         the room with its stairs (docs/zora-extras.md section 13)."""
-        return self._can_reach_item(level, Item.TRIFORCE, held)
+        piece = (level_item(LevelItemKind.TRIFORCE, level)
+                 if self.rules.per_level_codes and level in TRIFORCE_LEVEL_SET else Item.TRIFORCE)
+        return self._can_reach_item(level, piece, held)
 
     def reaches_ganon(self, held: frozenset[int]) -> bool:
         """Ganon's room reached (entry aside) and his family list unblocked: the bow and the
@@ -582,8 +600,7 @@ class AcceptanceCheck:
                 held.add(Item.BAIT)              # every bait found: now usable
                 changed = True
             for level in DUNGEONS:
-                if level not in completed and self.can_enter(level, frozen) \
-                        and self.completes(level, frozen):
+                if level not in completed and self.level_completed(level, frozen):
                     completed.add(level)
                     changed = True
             if LEVEL9_ENTRY not in held and (self.sword_count(swords, frozen) >= SWORDS_FOR_LEVEL_9

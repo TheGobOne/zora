@@ -15,7 +15,15 @@ are where items really are. A place is any of these that holds a major-pool item
 The major pool (owner decision 1, 2026-10-08) is the item shuffle's (PS-ITEM): the twelve
 progression items, the three special-cave items and heart containers, plus each ZORA extra's
 items while its flag is on (Add L4 Sword = Level 2's sword upgrade, item $01, among them). Small
-items, maps, compasses, triforces and Add L4 Sword = Level 9's fixed sword are never places.
+items, maps, compasses, triforces and Add L4 Sword = Level 9's fixed sword are never places, but for
+Shuffle Minor Dungeon Drops (B17, PS-ITEM-14): while it is on, a level room or item cellar holding
+bombs, five rupees or a key is a place too, a minor place (Place.minor; docs/design/archipelago-items.md
+piece 3), which the Item Counter does not count. The shop wares stay the major pool's: a shop that
+sells bombs or a key was never dealt.
+
+With Bomb Upgrades in the Item Pool (docs/design/archipelago-items.md piece 8), each bomb upgrader that sells
+(seller_rooms) is a room place named "Level N Room XX Bomb Upgrade": BUILD writes the Bomb Upgrade ($37) into his
+room's item byte, which the ROM's seller mode shows and sells for his price.
 
 Never a place, even holding a pool item (R2): a room on the last-boss trigger (the rule
 move_last_boss_room_items applies, is_last_boss_room), and Ganon's and Zelda's rooms.
@@ -34,6 +42,7 @@ from enum import Enum
 
 from ..model.enums import Destination, Enemy, Item, RoomType
 from ..model.game_world import GameWorld
+from ..model.level_items import LEVEL_ITEMS, LevelItemKind, level_item, level_of
 from ..model.levels import Level
 from ..model.overworld import POTION_SHOP_MIDDLE, ItemCave, OverworldItem, Shop
 from ..model.rooms import Room, StaircaseRoom
@@ -42,7 +51,7 @@ from .steps.mixed_overworld_quest import SHOWN
 from .steps.move_last_boss_room_items import is_last_boss_room
 from .steps.place_triforces import TRIFORCE_LEVELS
 from .steps.shop_items_in_pool import JOINED_SHOP_ITEMS
-from .steps.shuffle_items import POOL_ORDER
+from .steps.shuffle_items import MINOR_ITEMS, POOL_ORDER
 from .steps.shuffle_shop_items import SHOPS
 
 
@@ -67,7 +76,8 @@ class Place:
     own cell, where the walk finds it, and `stair_room`, the room its stairs are in); overworld
     places name `destination`, `position` (a shop ware's index) and `screens`, the overworld
     screens whose entrance leads there (the Armos item: the formation's screen; the coast: none,
-    the game gives it at a fixed spot)."""
+    the game gives it at a fixed spot). `minor`: a dungeon place BUILD left holding one of
+    Shuffle Minor Dungeon Drops' items (B17), whatever Archipelago puts there."""
     kind: PlaceKind
     name: str
     level: int | None = None
@@ -78,6 +88,7 @@ class Place:
     screens: tuple[int, ...] = ()
     forbids: frozenset[Item] = frozenset()
     requires: tuple[HeartsRequired, ...] = ()
+    minor: bool = False
 
     @property
     def is_dungeon(self) -> bool:
@@ -114,7 +125,65 @@ def major_pool(extras: ExtraOptions) -> frozenset[Item]:
     return frozenset(items)
 
 
+# A level's piece, map and compass as BUILD places them (the generic codes), and as places hold them in a
+# per-level seed (docs/design/archipelago-items.md piece 6; zora/model/level_items.py)
+TRIFORCE_ITEMS = frozenset(item for item, (kind, _level) in LEVEL_ITEMS.items() if kind is LevelItemKind.TRIFORCE)
+MAP_COMPASS_ITEMS = frozenset(LEVEL_ITEMS) - TRIFORCE_ITEMS
+
+
+def level_item_pool(extras: ExtraOptions) -> frozenset[Item]:
+    """The level items the pool switches add: generic and per-level codes alike."""
+    items: frozenset[Item] = frozenset()
+    if extras.add_triforces_to_pool:
+        items |= TRIFORCE_ITEMS
+    if extras.add_maps_compasses_to_pool:
+        items |= MAP_COMPASS_ITEMS
+    return items
+
+
+def item_pool(extras: ExtraOptions) -> frozenset[Item]:
+    """The items the places hold: the major pool, with Shuffle Minor Dungeon Drops (B17, PS-ITEM-14) its
+    bombs, five rupees and keys, with the pool switches the levels' pieces, maps and compasses, and with Bomb
+    Upgrades in the Item Pool the upgraders' Bomb Upgrade."""
+    return (major_pool(extras) | (MINOR_ITEMS if extras.minor_dungeon_drops else frozenset())
+            | level_item_pool(extras) | (frozenset({Item.BOMB_UPGRADE}) if extras.bomb_upgrades_in_pool
+                                         else frozenset()))
+
+
+# The levels whose "more bombs" man sells when PS-BOMB-03 has not rewritten UpdateUnderworldPerson_Full's test:
+# the game's own, CurLevel below 3, or 5, or 7
+GAME_SELLING_LEVELS = (1, 2, 5, 7)
+
+
+def seller_rooms(world: GameWorld) -> list[tuple[Level, Room]]:
+    """The bomb upgraders that sell (piece 8): an upgrader ($4F) in a level the game sends to the selling update,
+    PS-BOMB-03's two (World.bomb_upgrade_levels) or the game's own. A $4F person elsewhere only talks."""
+    levels = world.bomb_upgrade_levels or GAME_SELLING_LEVELS
+    return [(level, room) for level in world.levels if level.level_num in levels
+            for room in level.rooms if room.enemy == Enemy.BOMB_UPGRADER]
+
+
+def put_bomb_upgrades(world: GameWorld) -> None:
+    """Bomb Upgrades in the Item Pool: each seller's room holds a Bomb Upgrade, his place's own item (a seller's
+    room holds no item of its own: the game's "no item")."""
+    for _level, room in seller_rooms(world):
+        assert room.item == Item.NOTHING, (room.room_num, room.item)
+        room.item = Item.BOMB_UPGRADE
+
+
+def own_item(place: Place, item: Item, extras: ExtraOptions) -> Item:
+    """The item a place holds as the pool names it: in a per-level seed a generic piece, map or compass is its
+    own level's (FINISH writes every one so; places in other levels never hold a generic one)."""
+    if not extras.per_level_items or place.level is None or level_of(item) is None:
+        return item
+    found = level_of(item)
+    assert found is not None
+    kind, _ = found
+    return level_item(kind, place.level) if item in (Item.TRIFORCE, Item.MAP, Item.COMPASS) else item
+
+
 # --- restrictions (R2) -----------------------------------------------------------------------
+
 
 # With ZORA's remap on, $0E reads as "no item" in a dungeon room or cellar; it only belongs in
 # Ganon's room, which is never a place.
@@ -123,8 +192,15 @@ DUNGEON_FORBIDS = frozenset({Item.TRIFORCE_OF_POWER})
 # SI-PRICE-01 prices them (20-40). The spec's "no heart containers in shops" is not applied, since
 # it would refuse ZORA's own placement (docs/archipelago.md, "Restrictions").
 SHOP_FORBIDS: frozenset[Item] = frozenset()
+# A shop's left and right wares never sell a Triforce piece: with its digit a piece is three sprites, so a row
+# of wares stays within the console's eight only with at most one, in the middle (archipelago-items piece 6)
+SIDE_WARE_FORBIDS = SHOP_FORBIDS | TRIFORCE_ITEMS
+SIDE_WARES = (0, 2)
 # The potion shop opens only for a player who shows the letter (Shuffle Blue Potion).
 POTION_SHOP_FORBIDS = SHOP_FORBIDS | {Item.LETTER}
+# B17 keeps keys out of the white-sword cave (PS-ITEM-14's MAY, owner ruling 2026-10-27;
+# shuffle_items), and so does Archipelago while keys are places.
+WHITE_SWORD_CAVE_FORBIDS = frozenset({Item.KEY})
 # Ganon and Zelda (add_l4_sword's EXCLUDED_MONSTERS): their rooms are never places.
 FINAL_ROOM_ENEMIES = frozenset({Enemy.THE_BEAST, Enemy.THE_KIDNAPPED})
 
@@ -160,6 +236,7 @@ SHOP_NAMES: dict[Destination, str] = {
 # item cellar's is the Stairway item of the room its stairs are in, the words players use.
 ROOM_SUFFIX = "Floor"
 CELLAR_SUFFIX = "Stairway"
+SELLER_SUFFIX = "Bomb Upgrade"
 
 
 def _dungeon_room(level: int, room_num: int) -> str:
@@ -176,19 +253,26 @@ def cellar_name(level: int, stair_room: int) -> str:
     return f"{_dungeon_room(level, stair_room)} {CELLAR_SUFFIX}"
 
 
+def seller_name(level: int, room_num: int) -> str:
+    """A bomb upgrader's place (piece 8), by his room; `level` as in room_name."""
+    return f"{_dungeon_room(level, room_num)} {SELLER_SUFFIX}"
+
+
 def ware_name(shop: Destination, position: int) -> str:
     return f"{SHOP_NAMES[shop]} {WARE_NAMES[position]}"
 
 
 def all_place_names() -> list[str]:
     """Every name any seed can produce, for Archipelago's fixed location IDs, in a fixed order:
-    levels 1-9 x rooms $00-$7F x {room, cellar}, then the caves and the shop wares. The order is
-    the IDs': a name's spelling may change, its position never."""
+    levels 1-9 x rooms $00-$7F x {room, cellar}, then the caves and the shop wares, the later caves, and the bomb
+    upgraders' rooms (levels 1-9 x rooms $00-$7F). The order is the IDs': a name's spelling may change, its
+    position never."""
     names = [name for level in LEVELS for room_num in ROOM_NUMBERS
              for name in (room_name(level, room_num), cellar_name(level, room_num))]
     names += list(CAVE_NAMES.values())
     names += [ware_name(shop, position) for shop in SHOP_NAMES for position in range(len(WARE_NAMES))]
     names += list(LATER_CAVE_NAMES.values())
+    names += [seller_name(level, room_num) for level in LEVELS for room_num in ROOM_NUMBERS]     # piece 8
     return names
 
 
@@ -208,20 +292,24 @@ def _item_cellars(level: Level) -> Iterator[StaircaseRoom]:
 
 
 def _dungeon_places(world: GameWorld, pool: frozenset[Item]) -> list[Place]:
-    """Rooms and item cellars holding a pool item, block by block, in room-number order."""
+    """Rooms and item cellars holding a pool item, block by block, in room-number order; minor
+    when the item is one of B17's."""
     found: list[tuple[int, int, Place]] = []
+    sellers = {(level.level_num, room.room_num) for level, room in seller_rooms(world)}
     for level in world.levels:
         block_index = next(index for index, block in enumerate(world.level_blocks) if block is level.block)
         found.extend((block_index, room.room_num, Place(
-            PlaceKind.ROOM, room_name(level.rom_level_num, room.room_num), level=level.level_num,
-            room_num=room.room_num, forbids=DUNGEON_FORBIDS))
+            PlaceKind.ROOM, (seller_name if (level.level_num, room.room_num) in sellers else room_name)(
+                level.rom_level_num, room.room_num), level=level.level_num,
+            room_num=room.room_num, forbids=DUNGEON_FORBIDS, minor=room.item in MINOR_ITEMS))
             for room in level.rooms if room.item in pool and not is_never_a_place(room))
         for cellar in _item_cellars(level):
             if cellar.item in pool:
                 assert cellar.return_dest is not None
                 found.append((block_index, cellar.room_num, Place(
                     PlaceKind.CELLAR, cellar_name(level.rom_level_num, cellar.return_dest), level=level.level_num,
-                    room_num=cellar.room_num, stair_room=cellar.return_dest, forbids=DUNGEON_FORBIDS)))
+                    room_num=cellar.room_num, stair_room=cellar.return_dest, forbids=DUNGEON_FORBIDS,
+                    minor=cellar.item in MINOR_ITEMS)))
     return [place for _block, _room, place in sorted(found, key=lambda entry: entry[:2])]
 
 
@@ -264,7 +352,7 @@ def _cave_destinations(extras: ExtraOptions) -> list[Destination]:
     return sorted(caves)
 
 
-def _cave_place(world: GameWorld, destination: Destination) -> Place:
+def _cave_place(world: GameWorld, destination: Destination, extras: ExtraOptions) -> Place:
     overworld = world.overworld
     if destination == Destination.ARMOS_ITEM:
         screens: tuple[int, ...] = (overworld.armos_screen_ids[0],)
@@ -277,9 +365,10 @@ def _cave_place(world: GameWorld, destination: Destination) -> Place:
         cave = overworld.get_cave(destination, ItemCave)
         assert cave is not None, destination
         requires = (HeartsRequired(cave.heart_requirement),)
+    keyless = extras.minor_dungeon_drops and destination == Destination.WHITE_SWORD_CAVE
     return Place(PlaceKind.CAVE, (CAVE_NAMES | LATER_CAVE_NAMES)[destination], destination=destination,
-                 screens=screens,
-                 requires=requires)
+                 screens=screens, requires=requires,
+                 forbids=WHITE_SWORD_CAVE_FORBIDS if keyless else frozenset())
 
 
 def _ware_places(world: GameWorld, extras: ExtraOptions, pool: frozenset[Item]) -> list[Place]:
@@ -292,7 +381,8 @@ def _ware_places(world: GameWorld, extras: ExtraOptions, pool: frozenset[Item]) 
             cave = world.overworld.get_cave(shop, Shop)
             assert cave is not None, shop
             places += [Place(PlaceKind.SHOP_WARE, ware_name(shop, position), destination=shop, position=position,
-                             screens=_screens(world, shop), forbids=SHOP_FORBIDS)
+                             screens=_screens(world, shop),
+                             forbids=SIDE_WARE_FORBIDS if position in SIDE_WARES else SHOP_FORBIDS)
                        for position, ware in enumerate(cave.items) if ware.item in pool]
     if extras.shuffle_blue_potion:
         places.append(Place(PlaceKind.POTION_SHOP, ware_name(Destination.POTION_SHOP, POTION_SHOP_MIDDLE),
@@ -302,15 +392,15 @@ def _ware_places(world: GameWorld, extras: ExtraOptions, pool: frozenset[Item]) 
 
 
 def all_item_places(world: GameWorld, extras: ExtraOptions) -> list[Place]:
-    """Every place of the finished world holding a major-pool item, in a fixed order: the
-    dungeon places (block, then room number), then the caves and the shop wares in Destination
-    order. The same world and flags give the same list; so does the world parsed back from the
-    finished ZORA-mode ROM."""
+    """Every place of the finished world holding a major-pool item (and with B17 a dungeon place
+    holding one of its minor items), in a fixed order: the dungeon places (block, then room number),
+    then the caves and the shop wares in Destination order. The same world and flags give the same
+    list; so does the world parsed back from the finished ZORA-mode ROM."""
     pool = major_pool(extras)
-    caves = [_cave_place(world, destination) for destination in _cave_destinations(extras)]
+    caves = [_cave_place(world, destination, extras) for destination in _cave_destinations(extras)]
     overworld = sorted(caves + _ware_places(world, extras, pool),
                        key=lambda place: (place.destination, place.position or 0))
-    return _dungeon_places(world, pool) + overworld
+    return _dungeon_places(world, item_pool(extras)) + overworld
 
 
 # --- reading and writing ---------------------------------------------------------------------

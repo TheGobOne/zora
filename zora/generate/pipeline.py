@@ -129,7 +129,8 @@ from ..flags.support import (
     with_random_level_encoding_off,
 )
 from ..flags.zora_flags import SpoilerLevel, ZoraFlags, ZoraFlagStringError, spoiler_level
-from ..model.enums import DungeonNothingCode
+from ..model.enums import Destination, DungeonNothingCode
+from ..model.overworld import ItemCave
 from ..rom import level_encoding
 from ..rom.base_rom import PlayerRom
 from ..rom.game_config import GameConfig, HintMode, LevelEncodingKey
@@ -152,7 +153,7 @@ if TYPE_CHECKING:
     from ..model.game_world import GameWorld
     from .acceptance_check import LogicRules
     from .context import GenerationResult
-    from .finish import Assignment, Finished, ForeignLook
+    from .finish import Assignment, Finished
     from .places import Place
 
 # C03 (hint style): mixed (index 4), helpful (index 1, HT-HINT-04) and community (index 2,
@@ -216,6 +217,15 @@ class FlagsRefused(ValueError):
         self.flag_string = flag_string
         self.reasons = reasons
         super().__init__(f"flag string {flag_string!r} refused: " + "; ".join(reasons))
+
+
+def check_single_player(chosen: GenerationPlan) -> None:
+    """The Multiworld-only flags (zora_flags.MULTIWORLD_ONLY_FIELDS: Bomb Upgrades in the Item Pool,
+    docs/design/archipelago-items.md piece 8) are refused in a single-player ROM."""
+    refused = [name for name in sorted(zora_flags.MULTIWORLD_ONLY_FIELDS) if getattr(chosen.zora, name)]
+    if refused:
+        raise FlagsRefused(chosen.zora_flag_string,
+                           [f"{name} is for Multiworld games only (Archipelago)" for name in refused])
 
 
 @dataclass(frozen=True)
@@ -694,13 +704,31 @@ def extra_options(chosen: GenerationPlan) -> ExtraOptions:
         swordlish_pieces=chosen.zora_resolved.swordlish_pieces,
         start_triforce_pieces=chosen.alternatives.start_triforce_pieces,
         wizzrobes_shoot_wallmasters=chosen.zora_resolved.is_on("wizzrobes_shoot_wallmasters"),
+        minor_dungeon_drops=chosen.alternatives.minor_dungeon_drops,
+        add_triforces_to_pool=chosen.zora_resolved.is_on(zora_flags.ADD_TRIFORCES_FIELD),
+        add_maps_compasses_to_pool=chosen.zora_resolved.is_on(zora_flags.ADD_MAPS_COMPASSES_FIELD),
+        bomb_upgrades_in_pool=chosen.zora_resolved.bomb_upgrades_in_pool,
     )
 
 
 def shipped_logic_rules(chosen: GenerationPlan, world: GameWorld) -> LogicRules:
     """The rules a shipped seed was judged by: the ZORA extras', with the level-9 gate its accepted
-    attempt asked for (C08; FP-TRIF-02 to FP-TRIF-06 draw it in each attempt)."""
-    return replace(extra_options(chosen).logic_rules, level_9_gate=world.level_9_gate)
+    attempt asked for (C08; FP-TRIF-02 to FP-TRIF-06 draw it in each attempt), and Offense Item
+    Pacing's heart model asking the sword caves' own heart counts.
+
+    2.0.2 (2026-11-22): generation's walk assumes each sword cave asks the highest count its draw
+    can give, because the counts are drawn after the attempt ships. A shipped world's caves already
+    hold their counts: FINISH and the logic model judge by those, as the game does. Until then
+    FINISH asked, say, 14 hearts where the cave asked 10, refused assignments the logic model
+    accepted, and stopped Archipelago's generation."""
+    rules = replace(extra_options(chosen).logic_rules, level_9_gate=world.level_9_gate)
+    if rules.pacing_hearts is None:
+        return rules
+    white = world.overworld.get_cave(Destination.WHITE_SWORD_CAVE, ItemCave)
+    magical = world.overworld.get_cave(Destination.MAGICAL_SWORD_CAVE, ItemCave)
+    assert white is not None and magical is not None
+    return replace(rules, pacing_hearts=replace(rules.pacing_hearts, white_sword=white.heart_requirement,
+                                                magical_sword=magical.heart_requirement))
 
 
 def overworld_gates(zora: ZoraFlags, settings: Settings) -> OverworldGates:
@@ -729,20 +757,27 @@ class Built:
 
 def build(chosen: GenerationPlan, base_rom: bytes | PlayerRom) -> Built:
     """BUILD: generate_world, unchanged, and the item places of the world it made."""
-    from .places import all_item_places
+    from .places import all_item_places, put_bomb_upgrades
     world, result = generate_world(chosen, base_rom)
-    return Built(chosen, world, result, all_item_places(world, extra_options(chosen)), base_rom)
+    extras = extra_options(chosen)
+    if extras.bomb_upgrades_in_pool:
+        put_bomb_upgrades(world)         # after generation: its acceptance check never sees them
+    return Built(chosen, world, result, all_item_places(world, extras), base_rom)
 
 
 def finish(built: Built, base_rom: bytes | PlayerRom, assignment: Assignment | None = None,
            player_settings: PlayerSettings = DEFAULT_PLAYER_SETTINGS, recompute: bool = True,
            received: Collection[Item] = (), check: bool = True, slot_identity: bytes = b"",
-           look: ForeignLook | None = None, foreign_owners: dict[str, tuple[str, str]] | None = None) -> bytes:
+           foreign_owners: dict[str, tuple[str, str]] | None = None, solo: bool = False,
+           finish_seed: int | None = None) -> bytes:
     """FINISH: the built world as a ROM. With no assignment (ZORA mode) it is serialize_to_rom on
     the built world, which only reads it, so one build can be finished more than once. With one
     (External mode) the items go into a copy of the world first (finish_world); `slot_identity`
-    is Archipelago's record for the slot (zora/rom/slot_identity.py), written only with one;
-    `look`, how another player's item looks (finish.ForeignLook; the rupee by default)."""
+    is Archipelago's record for the slot (zora/rom/slot_identity.py), written only with one.
+    `solo`: a single-player seed's level-item swaps (solo_assignment; archipelago-items piece 7), written as a
+    ZORA-mode ROM (its seed number, its Item Counter, its shops' own one-time wares) in per-level mode.
+    `finish_seed`: FINISH's stream's key (default: the plan's generation seed; the unencoded report ROM of an
+    encoded seed passes the encoded plan's, so both draw the same prices and hints)."""
     from ..rom.base_rom import as_player_rom, using_player_rom
     from ..rom.serialize.rom_file import serialize_to_rom
     if assignment is None:
@@ -751,9 +786,29 @@ def finish(built: Built, base_rom: bytes | PlayerRom, assignment: Assignment | N
         return serialize_to_rom(written_world(built.world, config), base_rom, config=config,
                                 player_settings=player_settings)
     with using_player_rom(as_player_rom(base_rom)):
-        world, finished = finish_world(built, assignment, recompute, received, check, look, foreign_owners)
-    config = replace(finished.config, slot_identity=slot_identity, archipelago_rom=True, seed_number=None)
+        world, finished = finish_world(built, assignment, recompute, received, check, foreign_owners, finish_seed)
+    if solo:
+        assert not slot_identity, "a slot identity is External mode's"
+        config = replace(finished.config, one_time_places=built.plan.config.one_time_places,
+                         item_counter_table=with_item_counter(built).item_counter_table,
+                         per_level_shown=per_level_shown(built, world))
+        return serialize_to_rom(written_world(world, config), base_rom, config=config,
+                                player_settings=player_settings)
+    # Item Counter: the same table as ZORA mode's, from the built places (taking one counts whatever the assignment
+    # put there, another player's item too: the bit the game sets is pickup_check's), so a recipe rebuilds it
+    config = replace(finished.config, slot_identity=slot_identity, archipelago_rom=True, seed_number=None,
+                     item_counter_table=with_item_counter(built).item_counter_table,
+                     per_level_shown=per_level_shown(built, world),
+                     bomb_upgrade_sellers=extra_options(built.plan).bomb_upgrades_in_pool)
     return serialize_to_rom(written_world(world, config), base_rom, config=config, player_settings=player_settings)
+
+
+def per_level_shown(built: Built, world: GameWorld) -> tuple[int, ...]:
+    """Per-level mode's numbers (docs/design/archipelago-items.md piece 6): the status bar's number of each
+    data level 1-9, or () when neither pool switch is on."""
+    if not built.plan.zora_resolved.per_level_items:
+        return ()
+    return tuple(level.rom_level_num for level in sorted(world.levels, key=lambda level: level.level_num))
 
 
 def with_item_counter(built: Built) -> GameConfig:
@@ -763,7 +818,8 @@ def with_item_counter(built: Built) -> GameConfig:
     if not built.plan.zora_resolved.is_on(zora_flags.ITEM_COUNTER_FIELD):
         return config
     from .item_counter import counter_table
-    table = counter_table(built.places, config.mirror_overworld)
+    # the minor drops' places (Shuffle Minor Dungeon Drops, B17) are never counted (Place.minor)
+    table = counter_table([place for place in built.places if not place.minor], config.mirror_overworld)
     return replace(config, item_counter_table=table)
 
 
@@ -784,15 +840,16 @@ def written_world(world: GameWorld, config: GameConfig) -> GameWorld:
 
 
 def finish_world(built: Built, assignment: Assignment, recompute: bool = True, received: Collection[Item] = (),
-                 check: bool = True, look: ForeignLook | None = None,
-                 foreign_owners: dict[str, tuple[str, str]] | None = None) -> tuple[GameWorld, Finished]:
+                 check: bool = True, foreign_owners: dict[str, tuple[str, str]] | None = None,
+                 finish_seed: int | None = None) -> tuple[GameWorld, Finished]:
     """External mode before serialization: a deep copy of the built world with the assignment
     applied (finish.apply_assignment, which also takes `received` and `check`), on FINISH's own
-    stream; the built world is left as it is."""
-    from .finish import ForeignLook, apply_assignment, finish_rng
+    stream (keyed by `finish_seed`, default the plan's generation seed); the built world is left as it is."""
+    from .finish import apply_assignment, finish_rng
     world = copy.deepcopy(built.world)
-    finished = apply_assignment(world, built, assignment, finish_rng(built.plan.generation_seed), recompute,
-                                received, check, look or ForeignLook.RUPEE, foreign_owners)
+    seed = built.plan.generation_seed if finish_seed is None else finish_seed
+    finished = apply_assignment(world, built, assignment, finish_rng(seed), recompute,
+                                received, check, foreign_owners)
     return world, finished
 
 
@@ -803,17 +860,24 @@ def generate_rom(flag_string: str, seed: int, base_rom: bytes,
     the level encoding and the seed's code, which they never change):
     BUILD, then FINISH with no assignment (ZORA mode). Disable Custom Music on refuses a random
     Music value (PlayerSettingError). A graphics theme's tiles go into a working copy of the base
-    ROM first (graphics_theme.themed_player_rom), which the generation parses and copies from."""
+    ROM first (graphics_theme.themed_player_rom), which the generation parses and copies from.
+    With Add Triforces or Add Maps/Compasses to the Item Pool resolved On under any Item Shuffle but None,
+    FINISH takes the level items' solo assignment (solo_assignment; docs/design/archipelago-items.md piece 7)."""
     from ..rom.code_patches import seed_code
     from ..rom.graphics_theme import themed_player_rom
+    from .solo_assignment import acts, solo_assignment
     chosen = plan(flag_string, seed, zora_flag_string)
+    check_single_player(chosen)
     check_music_allowed(player_settings, chosen.zora.disable_custom_music)
     player = themed_player_rom(base_rom, player_settings.graphics_theme)
     built = build(chosen, player)
-    rom = finish(built, player, None, player_settings)
+    assignment = solo_assignment(built) if acts(built) else None
+    solo = assignment is not None
+    rom = finish(built, player, assignment, player_settings, solo=solo)
     report_rom = b""
     if chosen.encode_level_data and chosen.spoiler_level is not SpoilerLevel.NONE:
-        report_rom = finish(replace(built, plan=unencoded(chosen)), player, None, player_settings)
+        report_rom = finish(replace(built, plan=unencoded(chosen)), player, assignment, player_settings, solo=solo,
+                            finish_seed=chosen.generation_seed)
     return GeneratedRom(rom, seed, chosen.flag_string, chosen.encode_level_data, seed_code(rom),
                         chosen.zora_flag_string, chosen.spoiler_level, report_rom)
 
