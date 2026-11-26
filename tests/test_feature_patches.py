@@ -10,29 +10,61 @@ from pathlib import Path
 import pytest
 
 from tests.emulator import (
-    INV_BOMBS, INV_BOOMERANG, INV_RECORDER, PAUSED, SELECTED_ITEM_SLOT,
-    LAST_BOSS_DEFEATED, OBJ_STATE, OBJ_TYPE, ROOM_ITEM_SLOT,
-    ITEMS, OBJ_DIR, OBJ_Y,
-    INV_BOOK, INV_MAP, STATUS_BAR_MAP_TRIGGER, STATUS_BAR_ROWS, INV_KEYS, LEVEL_1_MOUTH_X, LEVEL_1_TRIFORCE, LEVEL_INFO,
-    CUR_LEVEL, CUR_OPENED_DOORS, CUR_PPU_CONTROL, OBJ_TIMER, OBJ_X, QUEST_NUMBERS, ROOM_ID,
-    SHUTTER_TRIGGER, TRIFORCE_FANFARE_ACTIVE, TRIGGERED_DOOR_CMD, TRIGGERED_DOOR_DIR, Button, Direction,
-    Emulator, Mode,
+    CUR_LEVEL,
+    CUR_OPENED_DOORS,
+    CUR_PPU_CONTROL,
+    INV_BOMBS,
+    INV_BOOK,
+    INV_BOOMERANG,
+    INV_KEYS,
+    INV_MAP,
+    INV_RECORDER,
+    ITEMS,
+    LAST_BOSS_DEFEATED,
+    LEVEL_1_MOUTH_X,
+    LEVEL_1_TRIFORCE,
+    LEVEL_INFO,
+    OBJ_DIR,
+    OBJ_STATE,
+    OBJ_TIMER,
+    OBJ_TYPE,
+    OBJ_X,
+    OBJ_Y,
+    PAUSED,
+    QUEST_NUMBERS,
+    ROOM_ID,
+    ROOM_ITEM_SLOT,
+    SELECTED_ITEM_SLOT,
+    SHUTTER_TRIGGER,
+    STATUS_BAR_MAP_TRIGGER,
+    STATUS_BAR_ROWS,
+    TRIFORCE_FANFARE_ACTIVE,
+    TRIGGERED_DOOR_CMD,
+    TRIGGERED_DOOR_DIR,
+    Button,
+    Direction,
+    Emulator,
+    Mode,
 )
-from zora.rom.code_patches import (
-    SEED_CODE_LENGTH, SEED_CODE_ITEMS, SEED_CODE_ADDRESS, EXIT_ROOM_COUNT_FLAG, LEVEL_INFO_EXIT_ROOM_COUNT,
-    code_patch_writes,
-)
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora.rom.revision import identify_rom
+from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng
+from zora.generate.shapes.options import ShapeOptions
 from zora.model.enums import BossSound, Item, ItemPosition, RoomAction, WallType
 from zora.model.game_world import GameWorld
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.rom.code_patches import (
+    EXIT_ROOM_COUNT_FLAG,
+    LEVEL_INFO_EXIT_ROOM_COUNT,
+    SEED_CODE_ADDRESS,
+    SEED_CODE_ITEMS,
+    SEED_CODE_LENGTH,
+    code_patch_writes,
+)
 from zora.rom.game_config import GameConfig, HintMode
 from zora.rom.parse.rom_file import parse_rom
+from zora.rom.revision import identify_rom
 from zora.rom.serialize.rom_file import serialize_to_rom
 from zora.rom.text_encoding import CHAR_TO_BYTE
-from zora.generate.rng import Rng
-from zora.generate.generation_pass import generate_shapes
-from zora.generate.shapes.options import ShapeOptions
 
 ALL_DOORS_OPEN = 0x0F
 OPEN_DOOR_CMD = 0x06

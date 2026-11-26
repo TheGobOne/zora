@@ -9,8 +9,8 @@ import pytest
 from zora.flags import zora_flags
 from zora.flags.codec import decode, encode
 from zora.flags.fields import START_SCREEN, StartScreen, ThreeState
-from zora.flags.zora_flags import ZoraFlags
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF
+from zora.flags.zora_flags import ZoraFlags
 from zora.generate.pipeline import generate_rom, plan
 from zora.generate.rng import Rng
 from zora.generate.steps import overworld_gates as gates

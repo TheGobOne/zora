@@ -34,7 +34,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from zora.rom.link_sprite import (  # noqa: E402
+from zora.rom.link_sprite import (
     LINK_HALVES,
     SPRITE_SET_SIZE,
     TILE_SIZE,

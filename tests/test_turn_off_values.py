@@ -23,17 +23,22 @@ from zora.generate.flag_steps import FlagSteps
 from zora.generate.generation_pass import generate_shapes
 from zora.generate.pipeline import GenerationPlan, generate_world, plan
 from zora.generate.rng import Rng
-from zora.generate.steps.shuffle_dungeon_text import SHUFFLED_SLOTS
-from zora.generate.steps.shuffle_bosses import BOSSES_BEATEN_BY, bosses_beaten_by_planted_items
 from zora.generate.steps.change_enemy_hp import BOSS_HP_TYPES, BOSS_MIRRORS, ENEMY_HP_TYPES
 from zora.generate.steps.item_shuffle_result import TrackedPlace
+from zora.generate.steps.shuffle_bosses import BOSSES_BEATEN_BY, bosses_beaten_by_planted_items
+from zora.generate.steps.shuffle_dungeon_text import SHUFFLED_SLOTS
 from zora.generate.steps.shuffle_shop_items import SECRET_AMOUNTS, SHOPS, TAKE_ANY_CANDLE_SLOT
-from zora_measure.checkpoints.groups_and_palettes import goriya_tile
 from zora.model.enums import Destination, Enemy, Item, RoomType
 from zora.model.game_world import GameWorld
 from zora.model.levels import MERCHANT_LIST
 from zora.model.overworld import (
-    DoorRepairCave, ItemCave, MoneyMakingGameCave, OverworldItem, SecretCave, Shop, TakeAnyCave,
+    DoorRepairCave,
+    ItemCave,
+    MoneyMakingGameCave,
+    OverworldItem,
+    SecretCave,
+    Shop,
+    TakeAnyCave,
 )
 from zora.rom.base_rom import piece_length, verify_base_rom
 from zora.rom.code_patch_data import PATCHES
@@ -47,6 +52,7 @@ from zora.rom.layout import (
 )
 from zora.rom.parse.rom_file import parse_rom
 from zora.rom.serialize.rom_file import serialize_to_rom
+from zora_measure.checkpoints.groups_and_palettes import goriya_tile
 
 pytestmark = pytest.mark.slow
 CaveT = TypeVar("CaveT")
@@ -415,9 +421,9 @@ def test_ps_boss_05_applies_only_with_b40_off() -> None:
 def test_ps_boss_05_bars_the_picks_with_b40_off(seed: int, monkeypatch: pytest.MonkeyPatch) -> None:
     """With B40 off, no boss the shuffle picks in levels 1 and 2 is beaten by an item at an end
     of the level's planted records; with B40 on the shuffle gets no bar (the MAY)."""
+    from zora.generate.rng import IntRng
     from zora.generate.steps.monster_lists import MonsterShuffleResult, RoomLists, _boss_code
     from zora.generate.steps.shuffle_bosses import BOSS_TIERS, VANILLA_BOSS_TIER, shuffle_bosses
-    from zora.generate.rng import IntRng
     from zora.model.levels import LevelBlock
     seen: list[tuple[int, frozenset[int], set[int]]] = []
 

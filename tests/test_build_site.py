@@ -46,7 +46,7 @@ def test_packed_module_matches_the_private_module(minified: str) -> None:
         packed = sys.modules[name]
         private = level_encoding.require_available()
         rom = bytes(random.Random(7).randrange(256) for _ in range(131088))
-        for seed, settings in ((1, b"8hq4"), (2**63, "flags".encode())):
+        for seed, settings in ((1, b"8hq4"), (2**63, b"flags")):
             encoded = packed.apply(rom, seed, settings)
             assert encoded == private.apply(rom, seed, settings)
             assert packed.decode_level_data(encoded, seed, settings) == private.decode_level_data(
@@ -127,7 +127,7 @@ def _fake_site(root: Path, worker: str = "const GLUE = `\n`;\n") -> Path:
 
 def test_single_file_inlines_everything(tmp_path: Path) -> None:
     page = build_site.single_file_html(_fake_site(tmp_path), "beta test")
-    assert "<link" not in page and '<script src=' not in page
+    assert "<link" not in page and "<script src=" not in page
     assert "fonts/" not in page.replace(build_site.FONT_LICENSE, "")
     assert page.count("data:font/woff2;base64,") == 3
     assert "/* zora.css */" in page and "// zora-web.js" in page

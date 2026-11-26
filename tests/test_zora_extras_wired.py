@@ -10,7 +10,17 @@ from functools import cache
 import pytest
 
 from tests.emulator import (
-    CUR_LEVEL, GAME_MODE, GAME_SUBMODE, ITEMS, OBJ_STATE, OBJ_TYPE, OBJ_X, OBJ_Y, ROOM_ID, ROOM_ITEM_SLOT, Emulator,
+    CUR_LEVEL,
+    GAME_MODE,
+    GAME_SUBMODE,
+    ITEMS,
+    OBJ_STATE,
+    OBJ_TYPE,
+    OBJ_X,
+    OBJ_Y,
+    ROOM_ID,
+    ROOM_ITEM_SLOT,
+    Emulator,
     Mode,
 )
 from zora.flags import form as flag_form
@@ -21,14 +31,20 @@ from zora.generate.acceptance_check import AcceptanceCheck
 from zora.generate.context import GenerationResult
 from zora.generate.generation_pass import has_magical_sword_hearts
 from zora.generate.pipeline import FlagsRefused, GenerationPlan, extra_options, generate_rom, generate_world, plan
+from zora.generate.steps.cave_entries import OverworldResult
 from zora.generate.steps.change_sword_hearts import MAGICAL_SWORD_HEARTS
 from zora.generate.steps.hint_text import (
-    HEARTS_NEEDED_TEXT, MAGICAL_SWORD_TEXT_SLOT, WHITE_SWORD_TEXT_SLOT, quote_problems, sword_cave_heart_quotes,
+    HEARTS_NEEDED_TEXT,
+    MAGICAL_SWORD_TEXT_SLOT,
+    WHITE_SWORD_TEXT_SLOT,
+    quote_problems,
+    sword_cave_heart_quotes,
 )
 from zora.generate.steps.item_shuffle_result import EXTRA_SLOT_CAVES
-from zora.generate.steps.cave_entries import OverworldResult
 from zora.generate.steps.randomize_magical_sword import (
-    TAKE_ANY_CAVES_SPENT_ELSEWHERE, has_enough_heart_containers, reachable_take_any_hearts,
+    TAKE_ANY_CAVES_SPENT_ELSEWHERE,
+    has_enough_heart_containers,
+    reachable_take_any_hearts,
     take_any_heart_allowance,
 )
 from zora.model.enums import Destination, Item, RoomAction
@@ -270,7 +286,7 @@ def test_the_heart_check_counts_all_but_two_reachable_take_any_caves() -> None:
     red potion, the blue candle (OW-SHOP-05, with B09) and a heart container (PRG0's wares)."""
     _, world, _ = generated(SWORD, 1)
     take_any = world.overworld.caves[[c.destination for c in world.overworld.caves].index(Destination.TAKE_ANY)]
-    assert set(getattr(take_any, "items")) == {Item.RED_POTION, Item.BLUE_CANDLE, Item.HEART_CONTAINER}
+    assert set(take_any.items) == {Item.RED_POTION, Item.BLUE_CANDLE, Item.HEART_CONTAINER}
     every_need = frozenset({Item.RAFT, Item.RECORDER, Item.LADDER, Item.POWER_BRACELET})
     # the four code-17 screens a first-quest overworld shows; PRG0's second-quest three ($06, $20,
     # $3A) never open in it (tests/test_take_any_quest.py)

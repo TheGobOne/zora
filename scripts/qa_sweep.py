@@ -57,34 +57,48 @@ from typing import Any, TypeVar
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
-from zora_web.api import (  # noqa: E402
-    PAGE_BOSS_SOUND_WORD, PAGE_CHOICES, PAGE_HEART_SLOT, PAGE_LEVEL_WORD, PAGE_TUNIC_SLOTS, player_settings_from_page,
-)
-from zora_measure.progress import track  # noqa: E402
 from zora.flags import zora_flags  # noqa: E402
 from zora.flags.codec import decode, encode  # noqa: E402
 from zora.flags.dependencies import apply_dependencies, check_dependencies  # noqa: E402
 from zora.flags.fields import (  # noqa: E402
-    ENCODE_LEVEL_DATA, OPTION_FIELDS, OPTIONS_BY_ID, TOGGLE_FIELDS,
-    DungeonLayoutSource, Settings, ThreeState, WoodenSwordState,
+    ENCODE_LEVEL_DATA,
+    OPTION_FIELDS,
+    OPTIONS_BY_ID,
+    TOGGLE_FIELDS,
+    DungeonLayoutSource,
+    Settings,
+    ThreeState,
+    WoodenSwordState,
 )
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF  # noqa: E402
-from zora.flags.zora_flags import L4Sword  # noqa: E402
 from zora.flags.support import (  # noqa: E402
-    ALTERNATIVE_OPTIONS, TURN_OFF_OPTIONS, TURN_OFF_TOGGLES, Support, mvp_baseline_settings, support,
+    ALTERNATIVE_OPTIONS,
+    TURN_OFF_OPTIONS,
+    TURN_OFF_TOGGLES,
+    Support,
+    mvp_baseline_settings,
+    support,
 )
+from zora.flags.zora_flags import L4Sword  # noqa: E402
 from zora.generate.acceptance_check import acceptance_check  # noqa: E402
-from zora.generate.generation_pass import has_magical_sword_hearts  # noqa: E402
 from zora.generate.context import GenerationResult  # noqa: E402
+from zora.generate.generation_pass import has_magical_sword_hearts  # noqa: E402
 from zora.generate.pipeline import (  # noqa: E402
-    Built, FlagsRefused, GeneratedRom, GenerationPlan, SeedRefused, build, extra_options, generate_rom,
-    overworld_gates, plan, shipped_logic_rules, with_item_counter, written_world,
+    Built,
+    FlagsRefused,
+    GeneratedRom,
+    GenerationPlan,
+    SeedRefused,
+    build,
+    extra_options,
+    generate_rom,
+    overworld_gates,
+    plan,
+    shipped_logic_rules,
+    with_item_counter,
+    written_world,
 )
 from zora.generate.steps.cave_entries import OverworldResult  # noqa: E402
-from zora_measure.alternative_values import HELPFUL_TEXT_SLOTS, alternative_value_figures  # noqa: E402
-from zora_measure.checks import Check, finished_rom_checks, run_checks  # noqa: E402
-from zora_measure.overworld_walk import unreached_caves  # noqa: E402
-from zora_measure.owner_flags import owner_flag_problems  # noqa: E402
 from zora.model.game_world import GameWorld  # noqa: E402
 from zora.rom import level_encoding  # noqa: E402
 from zora.rom.base_rom import verify_base_rom  # noqa: E402
@@ -93,10 +107,28 @@ from zora.rom.game_config import GameConfig  # noqa: E402
 from zora.rom.graphics_theme import GraphicsTheme, theme_offsets  # noqa: E402
 from zora.rom.parse.rom_file import parse_rom  # noqa: E402
 from zora.rom.player_settings import (  # noqa: E402
-    BLACKER_THAN_BLACK, BOSS_SOUND_WORDS, LEVEL_WORD_CHOICES, PALETTE_SIZE, RANDOM_BOSS_SOUND_WORD,
-    PlayerSettingError, apply_player_settings,
+    BLACKER_THAN_BLACK,
+    BOSS_SOUND_WORDS,
+    LEVEL_WORD_CHOICES,
+    PALETTE_SIZE,
+    RANDOM_BOSS_SOUND_WORD,
+    PlayerSettingError,
+    apply_player_settings,
 )
 from zora.rom.serialize.rom_file import serialize_to_rom  # noqa: E402
+from zora_measure.alternative_values import HELPFUL_TEXT_SLOTS, alternative_value_figures  # noqa: E402
+from zora_measure.checks import Check, finished_rom_checks, run_checks  # noqa: E402
+from zora_measure.overworld_walk import unreached_caves  # noqa: E402
+from zora_measure.owner_flags import owner_flag_problems  # noqa: E402
+from zora_measure.progress import track  # noqa: E402
+from zora_web.api import (  # noqa: E402
+    PAGE_BOSS_SOUND_WORD,
+    PAGE_CHOICES,
+    PAGE_HEART_SLOT,
+    PAGE_LEVEL_WORD,
+    PAGE_TUNIC_SLOTS,
+    player_settings_from_page,
+)
 
 SWEEP_KEY = "zora qa sweep"
 # The ZORA strings: every flag off; Randomize Letter; Randomize Magical Sword (heart cap 12)

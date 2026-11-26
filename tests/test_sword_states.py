@@ -25,8 +25,7 @@ from tests.emulator import (
     Emulator,
 )
 from tests.needs import needs_base_rom
-from tests.test_assignment_emulator import Console, floor_room, with_items
-from tests.test_assignment_emulator import MONSTER_SLOTS
+from tests.test_assignment_emulator import MONSTER_SLOTS, Console, floor_room, with_items
 from tests.test_november_settings import OBJ_HP, _enter_room
 from zora.flags import codec, zora_flags
 from zora.flags.dependencies import resolve
@@ -39,10 +38,10 @@ from zora.generate.rng import Rng
 from zora.generate.steps.change_enemy_hp import GANON
 from zora.generate.steps.hint_text import BOMB_UPGRADE_NAME, VANILLA_NAMES
 from zora.model.enums import Item, RoomAction, WallType
-from zora.rom.serialize.rom_file import serialize_to_rom
 from zora.rom import sword_states as patches
 from zora.rom.base_rom import remember_repo_base_rom
 from zora.rom.game_config import GameConfig
+from zora.rom.serialize.rom_file import serialize_to_rom
 
 DEFAULT_SETTINGS = codec.decode(metadata()["defaultFlags"])      # CP-5 (B09 and B49 on)
 MUFFLE_RUG = "2487lt0moGMFLRug1ofQdxPuUBWnJVSsi7d202I"

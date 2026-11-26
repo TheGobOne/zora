@@ -67,7 +67,7 @@ def test_the_page_shows_the_log_button_by_level_and_the_visualizer_by_encoding()
     assert "if (result.spoilerLevel > 0) {" in buttons and '"download-spoiler"' in buttons
     assert '"download-tracker"' in buttons and "if (encoded) return;" in buttons
     # the tracker button at every level (the starter file at None), after the level's check
-    assert buttons.index('"download-tracker"') > buttons.index("$(\"download\").append(spoiler);")
+    assert buttons.index('"download-tracker"') > buttons.index('$("download").append(spoiler);')
     assert buttons.index("if (encoded) return;") < buttons.index('"view-visualizer"')
     assert "addSeedReportButtons(result, requested.encoded);" in PAGE_SCRIPT
     worker = (REPO / "web" / "zora-worker.js").read_text()

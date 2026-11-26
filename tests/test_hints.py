@@ -1,10 +1,13 @@
 """Hint assignment, B2.5 (post-shapes-b25.md PS-HINT-01..06)."""
-from zora.model.enums import BossSpriteSet, Direction, Enemy, EnemySpriteSet, RoomType, UnderworldPersonInit
-from zora.model.rooms import EnemyInfo, LayoutInfo
-from zora.model.levels import Level, LevelBlock
 from zora.generate.steps.assign_hints_for_hint_type import (
-    HintAssignmentResult, assign_hints_for_hint_type, balance_levels, move_helpful_markers,
+    HintAssignmentResult,
+    assign_hints_for_hint_type,
+    balance_levels,
+    move_helpful_markers,
 )
+from zora.model.enums import BossSpriteSet, Direction, Enemy, EnemySpriteSet, RoomType, UnderworldPersonInit
+from zora.model.levels import Level, LevelBlock
+from zora.model.rooms import EnemyInfo, LayoutInfo
 
 PERSON = 0x40                    # the person flag in an enemy code
 
@@ -56,7 +59,7 @@ def test_repeated_kept_person_level_moves_once() -> None:
 
 
 def test_balance_flips_toward_five_or_six() -> None:
-    counts = {level: 1 for level in range(1, 9)}
+    counts = dict.fromkeys(range(1, 9), 1)
     counts[5] = 3
     state = HintAssignmentResult(helpful={3, 4, 6, 8})
     balance_levels(state, counts)                   # 1+1+3+1 = 6 already
@@ -65,7 +68,7 @@ def test_balance_flips_toward_five_or_six() -> None:
     state = HintAssignmentResult(helpful={3, 4, 6, 8})
     balance_levels(state, counts)
     assert state.helpful == {1, 2, 3, 4, 6, 8}     # 8 -> 7 -> 6
-    counts = {level: 1 for level in range(1, 9)}    # 4: flip level 2..8's first helpful
+    counts = dict.fromkeys(range(1, 9), 1)    # 4: flip level 2..8's first helpful
     state = HintAssignmentResult(helpful={3, 4, 6, 8})
     balance_levels(state, counts)
     assert state.helpful == {4, 6, 8}

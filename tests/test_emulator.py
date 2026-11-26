@@ -6,7 +6,17 @@ from pathlib import Path
 import pytest
 
 from tests.emulator import (
-    CHR_RAM_SIZE, CUR_LEVEL, FRAME_COUNTER, OBJ_DIR, OBJ_X, OBJ_Y, ROOM_ID, Button, Direction, Emulator, Mode,
+    CHR_RAM_SIZE,
+    CUR_LEVEL,
+    FRAME_COUNTER,
+    OBJ_DIR,
+    OBJ_X,
+    OBJ_Y,
+    ROOM_ID,
+    Button,
+    Direction,
+    Emulator,
+    Mode,
 )
 from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
 from zora.rom.layout import NES_HEADER_SIZE

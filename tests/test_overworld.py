@@ -7,17 +7,12 @@ from pathlib import Path
 
 import pytest
 
+from zora.model.enums import Item
+from zora.model.game_world import GameWorld
 from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
 from zora.rom.game_config import GameConfig, HintMode
-from zora.model.game_world import GameWorld
-from zora.model.enums import Item
 from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.rom.vanilla_overworld import caves
-from zora.rom.vanilla_overworld import layouts
-from zora.rom.vanilla_overworld import level_info
-from zora.rom.vanilla_overworld import recorder
-from zora.rom.vanilla_overworld import screens
-from zora.rom.vanilla_overworld import tables
+from zora.rom.vanilla_overworld import caves, layouts, level_info, recorder, screens, tables
 from zora.rom.vanilla_overworld.caves import CaveFlags
 from zora.rom.vanilla_overworld.screens import EntranceKind, QuestSecret
 
@@ -159,10 +154,10 @@ def test_agrees_with_the_parser(rom: bytes) -> None:
 
 @pytest.fixture(scope="module")
 def finished(rom: bytes) -> list[tuple[bytes, GameWorld]]:
-    from zora.generate.rng import Rng
-    from zora.rom.serialize.rom_file import serialize_to_rom
     from zora.generate.generation_pass import generate_shapes
+    from zora.generate.rng import Rng
     from zora.generate.shapes.options import ShapeOptions
+    from zora.rom.serialize.rom_file import serialize_to_rom
     outs = []
     for seed in range(4):
         gw = parse_rom(rom)
@@ -235,10 +230,10 @@ def test_recorder_byte_exceptions() -> None:
 
 def test_price_jitter_undo() -> None:
     """OW-SHOP-03: a shift to 255 or above (or 0 or below) is undone."""
+    from zora.generate.rng import ScriptedRng
+    from zora.generate.steps.shuffle_shop_items import jitter_prices
     from zora.model.enums import Item
     from zora.model.overworld import ShopItem
-    from zora.generate.steps.shuffle_shop_items import jitter_prices
-    from zora.generate.rng import ScriptedRng
     pairs = [ShopItem(Item.BLUE_RING, 250), ShopItem(Item.SINGLE_HEART, 10), ShopItem(Item.BOMBS, 20)]
     jitter_prices(pairs, ScriptedRng([25, 0, 40]))      # +5, -20, +20
     assert [p.price for p in pairs] == [250, 10, 40]
@@ -258,8 +253,8 @@ def test_start_y() -> None:
 def test_start_screen_draw() -> None:
     """One seed number and two discards, then numbers mod 128 until a
     listed screen: 5 is not listed, 152 mod 128 = 24 is."""
-    from zora.generate.steps.shuffle_start_screen import shuffle_start_screen
     from zora.generate.rng import ScriptedRng
+    from zora.generate.steps.shuffle_start_screen import shuffle_start_screen
     assert shuffle_start_screen(ScriptedRng([7, 8, 9, 5, 152])).screen == 24
 
 
@@ -267,7 +262,10 @@ def test_start_screen_exchange(rom: bytes) -> None:
     """Steps 1-4 on the shipped bytes: the start screen and Y, the whole C
     byte exchanged with 119's, D bit 7 moved from S to 119, nothing else."""
     from zora.generate.steps.shuffle_start_screen import (
-        START_SCREENS, StartScreen, apply_start_screen, start_y,
+        START_SCREENS,
+        StartScreen,
+        apply_start_screen,
+        start_y,
     )
     from zora.rom.serialize.rom_file import serialize_to_rom
     base = screens.read_screens(rom)
@@ -307,10 +305,10 @@ def test_wooden_sword_visit_refusal() -> None:
     entry's visit; at the code-16 visit a refused partner repeats the whole
     visit (a new discarded j, then a new partner), and the entry itself is
     a legal partner."""
-    from zora.model.enums import Destination
+    from zora.generate.rng import ScriptedRng
     from zora.generate.steps.cave_entries import Entry
     from zora.generate.steps.shuffle_caves import walk_destination_codes
-    from zora.generate.rng import ScriptedRng
+    from zora.model.enums import Destination
     level_1 = Destination.LEVEL_1
     entries = [Entry(10, level_1, 0), Entry(119, Destination.WOOD_SWORD_CAVE, 0)]
     rng = ScriptedRng([

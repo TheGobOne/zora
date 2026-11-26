@@ -4,17 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from zora.model.game_world import GameWorld
+from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng
+from zora.generate.shapes.options import ShapeOptions
 from zora.model.enums import Item, RoomType
 from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora.rom.parse.rom_file import load_rom, parse_rom
 from zora.rom.game_config import GameConfig, HintMode
+from zora.rom.parse.rom_file import load_rom, parse_rom
 from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.generate.rng import Rng
-from zora.generate.generation_pass import generate_shapes
-from zora.generate.shapes.options import ShapeOptions
-from zora.rom.serialize.game_world import serialize_game_world
-
 
 # Generated hint text is written as generated seeds write it (the extended bank), not into the
 # vanilla bank, which ZORA's wording outgrows.
@@ -136,7 +133,6 @@ def test_t5_agrees_with_corpus_fitted_table() -> None:
     """Cross-check: the spec's T5 position model, projected through the nine
     vanilla level position tables, must broadly agree with the independently
     corpus-fitted usable-position table (zora/generate/shapes/item_positions.py)."""
-    from zora.model.game_world import GameWorld
     from zora.generate.shapes.item_positions import USABLE_ITEM_POSITIONS
     from zora.generate.shapes.t5_positions import T5_BASE
     tables = [list(l.item_position_table) for l in parse_rom(_vanilla_rom()).levels]
@@ -165,8 +161,8 @@ def test_t5_agrees_with_corpus_fitted_table() -> None:
 
 
 def test_restart_reasons_recorded() -> None:
-    from zora.generate.rng import Rng
     from zora.generate.generation_pass import generate_shapes
+    from zora.generate.rng import Rng
     from zora.generate.shapes.options import ShapeOptions
     rom = _vanilla_rom()
     for seed in range(10):

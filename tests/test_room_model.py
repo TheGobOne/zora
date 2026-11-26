@@ -6,19 +6,31 @@ from pathlib import Path
 
 import pytest
 
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora.model.rooms import (
-    COUNT_INDEX_MASK, ITEM_MASK, ITEM_POSITION_MASK, ITEM_POSITION_SHIFT, LAYOUT_ID_MASK, MONSTER_BIT_CODE,
-    MONSTER_LIST_BITS, MONSTER_VALUE_BIT, PUSH_BLOCK_VARIANT, TRIGGER_MASK, EnemyInfo, ItemInfo, LayoutInfo,
-    Room, SecretInfo,
-)
-from zora.model.enums import BossSound, Enemy, Item, ItemPosition, RoomAction, RoomType, WallType
-from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.generate.rng import Rng
-from zora.rom.serialize.levels import _room_bytes
 from zora.generate.generation_pass import generate_shapes
-from zora.generate.ship import build_sets
+from zora.generate.rng import Rng
 from zora.generate.shapes.options import ShapeOptions
+from zora.generate.ship import build_sets
+from zora.model.enums import BossSound, Enemy, Item, ItemPosition, RoomAction, RoomType, WallType
+from zora.model.rooms import (
+    COUNT_INDEX_MASK,
+    ITEM_MASK,
+    ITEM_POSITION_MASK,
+    ITEM_POSITION_SHIFT,
+    LAYOUT_ID_MASK,
+    MONSTER_BIT_CODE,
+    MONSTER_LIST_BITS,
+    MONSTER_VALUE_BIT,
+    PUSH_BLOCK_VARIANT,
+    TRIGGER_MASK,
+    EnemyInfo,
+    ItemInfo,
+    LayoutInfo,
+    Room,
+    SecretInfo,
+)
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.rom.parse.rom_file import load_rom, parse_rom
+from zora.rom.serialize.levels import _room_bytes
 
 WALL_FIELD_VALUES = 8
 BOSS_SOUND_VALUES = 4

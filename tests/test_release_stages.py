@@ -105,7 +105,7 @@ def test_each_way_in_reaches_the_release(make_release: ModuleType, monkeypatch: 
     monkeypatch.setattr(make_release, "release", release)
     monkeypatch.setattr(sys, "argv", ["make_release.py", *argv])
     assert make_release.main() == 0 and calls == [call]
-    assert 'python3 scripts/make_release.py --dry-run || failed' in (SCRIPTS / "verify_full.sh").read_text()
+    assert "python3 scripts/make_release.py --dry-run || failed" in (SCRIPTS / "verify_full.sh").read_text()
 
 
 def _stage_run(make_release: ModuleType, monkeypatch: pytest.MonkeyPatch,

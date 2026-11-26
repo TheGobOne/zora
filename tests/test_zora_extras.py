@@ -12,15 +12,27 @@ import pytest
 from tests.test_feature_patches import vanilla
 from zora.generate.rng import Rng
 from zora.generate.steps.extra_pool_items import (
-    CaveSlotPlace, ExtraPoolItems, ExtraSlotPlace, ItemCellarPlace, LevelRoomPlace, PoolPlace,
-    apply_extra_pool_items, extra_cave, pool_places,
+    CaveSlotPlace,
+    ExtraPoolItems,
+    ExtraSlotPlace,
+    ItemCellarPlace,
+    LevelRoomPlace,
+    PoolPlace,
+    apply_extra_pool_items,
+    extra_cave,
+    pool_places,
 )
 from zora.generate.steps.item_shuffle_result import (
-    LETTER_SLOT, MAGICAL_SWORD_SLOT, ItemShuffleOptions, ItemShuffleResult,
+    LETTER_SLOT,
+    MAGICAL_SWORD_SLOT,
+    ItemShuffleOptions,
+    ItemShuffleResult,
 )
 from zora.generate.steps.randomize_letter import randomize_letter
 from zora.generate.steps.randomize_magical_sword import (
-    count_reachable_heart_containers, has_enough_heart_containers, heart_container_places,
+    count_reachable_heart_containers,
+    has_enough_heart_containers,
+    heart_container_places,
     randomize_magical_sword,
 )
 from zora.generate.steps.shuffle_items import shuffle_items
@@ -287,11 +299,21 @@ from zora.generate.rng import ScriptedRng  # noqa: E402
 from zora.generate.steps.extra_pool_items import ShopWarePlace  # noqa: E402
 from zora.generate.steps.item_shuffle_result import shop_of_slot, shop_ware_slot  # noqa: E402
 from zora.generate.steps.shop_items_in_pool import (  # noqa: E402
-    JOINED_SHOP_ITEMS, own_shop_ware, price_displaced_wares, shop_items_in_pool,
+    JOINED_SHOP_ITEMS,
+    own_shop_ware,
+    price_displaced_wares,
+    shop_items_in_pool,
 )
 from zora.generate.steps.shop_prices import (  # noqa: E402
-    ALWAYS_REQUIRED, BOOMERANG_PRICES, BOOMERANGS, CHEAP_ITEMS, DEFAULT_PRICE_RULES, HEART_CONTAINER_PRICES,
-    OPTIONAL_ITEMS, OPTIONAL_PRICES, REQUIRED_PRICES,
+    ALWAYS_REQUIRED,
+    BOOMERANG_PRICES,
+    BOOMERANGS,
+    CHEAP_ITEMS,
+    DEFAULT_PRICE_RULES,
+    HEART_CONTAINER_PRICES,
+    OPTIONAL_ITEMS,
+    OPTIONAL_PRICES,
+    REQUIRED_PRICES,
 )
 from zora.model.overworld import Shop  # noqa: E402
 

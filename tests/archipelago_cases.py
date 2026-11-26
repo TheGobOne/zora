@@ -5,12 +5,22 @@ from dataclasses import replace
 
 from tests.test_coop_reserved import BASELINE_FOR_OWNER_FLAGS, FINISHED_CASES, OWNER_FLAGS_ON, z1r_with
 from zora.flags import zora_flags
-from zora.flags.fields import (CaveShuffle, DungeonLayoutSource, DungeonRoomShuffle, HintStyle, HitPointChange,
-                               Level9Requirement, OverworldQuest, PinnedItem, StartScreen, ThreeState,
-                               WoodenSwordState)
-from zora.flags.zora_flags import OopsAllBosses, OopsAllEnemies
+from zora.flags.fields import (
+                               CaveShuffle,
+                               DungeonLayoutSource,
+                               DungeonRoomShuffle,
+                               HintStyle,
+                               HitPointChange,
+                               Level9Requirement,
+                               OverworldQuest,
+                               PinnedItem,
+                               StartScreen,
+                               ThreeState,
+                               WoodenSwordState,
+)
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF
 from zora.flags.support import START_ITEM_TOGGLES
+from zora.flags.zora_flags import OopsAllBosses, OopsAllEnemies
 
 # Randomize Magical Sword and Randomize Letter (version 1's "1.F")
 SWORD_AND_LETTER = "1.F"

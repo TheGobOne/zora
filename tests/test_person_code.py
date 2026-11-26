@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.model.enums import TollOption
 from zora.model.game_world import GameWorld
 from zora.model.rooms import LifeOrMoneyToll
-from zora.model.enums import TollOption
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
 from zora.rom.parse.rom_file import load_rom, parse_rom
 from zora.rom.serialize.rom_file import serialize_to_rom
 

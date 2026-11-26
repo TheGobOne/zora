@@ -1,10 +1,10 @@
 """Tests for the shape step (SH-GRID-01..07)."""
 from collections import Counter
 
-from zora.model import room_grid
 from zora.generate.rng import Rng, ScriptedRng
 from zora.generate.shapes.gridgen import _six_level_start, _sixth_level_first_start, grow_set
-from zora.generate.shapes.world import GRID_COLS, GRID_ROWS, SetWorld
+from zora.generate.shapes.world import GRID_ROWS, SetWorld
+from zora.model import room_grid
 
 
 def _grow(seed: int, six: bool) -> SetWorld:

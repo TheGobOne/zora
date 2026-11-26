@@ -6,7 +6,7 @@ ZORA's code patches (asm/series.txt) with the patches before it applied:
 fp-prog-01, then fp-prog-02. A piece is ZORA's own bytes or an Original
 (source, length), read from the player's ROM when written.
 """
-from zora.rom.base_rom import Original, Piece
+from zora.rom.base_rom import Piece
 
 PATCHES: dict[str, tuple[tuple[int, Piece], ...]] = {
     "fp-prog-01": (

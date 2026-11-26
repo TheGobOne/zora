@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora.rom.parse.rom_file import load_rom, parse_rom
 from zora.generate.rng import Rng
 from zora.generate.steps.shuffle_dungeon_palettes import TEMPLATES, color_candidates, shuffle_dungeon_palettes
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.rom.parse.rom_file import load_rom, parse_rom
 
 
 def _vanilla() -> bytes:

@@ -19,24 +19,22 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
-from zora_measure.checks import run_checks  # noqa: E402
-from zora.model.enums import Enemy, Item, RoomType, Side, WallType  # noqa: E402
-from zora.model.game_world import GameWorld
-from zora.model.levels import Level
-
 from dataclasses import replace  # noqa: E402
 
 from zora.flags.form import BETA_IN_USE_TEXT, BETA_WARNING, beta_settings_used  # noqa: E402
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF  # noqa: E402
+from zora.generate.pipeline import FlagsRefused, generate_world, plan  # noqa: E402
+from zora.model.enums import Enemy, Item, RoomType, Side, WallType  # noqa: E402
+from zora.model.game_world import GameWorld
+from zora.model.levels import Level
+from zora.model.room_grid import neighbor  # noqa: E402
 from zora.rom import level_encoding
 from zora.rom.base_rom import BASE_ROM_PATH  # noqa: E402
-from zora.rom.revision import RomNotRecognized, identify_rom  # noqa: E402
-from zora.generate.pipeline import FlagsRefused, generate_world, plan  # noqa: E402
 from zora.rom.parse.rom_file import load_rom, parse_rom  # noqa: E402
-from zora.rom.serialize.rom_file import serialize_to_rom
 from zora.rom.player_settings import PlayerSettingError, parse_player_settings  # noqa: E402
-from zora.model.room_grid import neighbor  # noqa: E402
-from zora.generate.shapes.tables import PERSON_LIST_DEFAULT, L9_PERSON_LISTS, EXTRA_PERSON_5_7  # noqa: E402
+from zora.rom.revision import RomNotRecognized, identify_rom  # noqa: E402
+from zora.rom.serialize.rom_file import serialize_to_rom
+from zora_measure.checks import run_checks  # noqa: E402
 
 PERSON_LISTS = {0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 0x50, 0x51, 0x52}
 
@@ -209,8 +207,8 @@ def main() -> int:
                  f"- spec checks: {len(checks) - len(failed)}/{len(checks)} pass"
                  + (f" (failed: {[f.check_id for f in failed]})" if failed else ""),
                  *([music_line] if music_line else []),
-                 (f"- map: E=entrance T=triforce P=person g=grumble Z=zelda G=ganon "
-                  f"s=staircase house room S=stairway cell #=room .=nothing")]
+                 ("- map: E=entrance T=triforce P=person g=grumble Z=zelda G=ganon "
+                  "s=staircase house room S=stairway cell #=room .=nothing")]
         for lvl in gw2.levels:
             t = level_tallies(lvl)
             warn = ""

@@ -5,27 +5,34 @@ from pathlib import Path
 
 import pytest
 
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora.rom.game_config import GameConfig, HintMode
-from zora.model.enums import (
-    BossSound, BossSpriteSet, Direction, Enemy, EnemySpriteSet, Item, RoomAction, RoomType, TollOption,
-    WallType,
-)
-from zora.model.rooms import EnemyInfo, ItemInfo, LayoutInfo, LifeOrMoneyToll, Room, StaircaseRoom, WallSet
-from zora.model.levels import Level, LevelBlock
-from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.generate.rng import Rng, ScriptedRng
 from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng, ScriptedRng
 from zora.generate.shapes.options import ShapeOptions
-from zora.generate.steps.item_shuffle_result import ItemShuffleOptions, ItemShuffleResult
 from zora.generate.steps.add_money_or_life_rooms import add_money_or_life_rooms
+from zora.generate.steps.change_money_or_life_toll import change_money_or_life_toll
+from zora.generate.steps.item_shuffle_result import ItemShuffleOptions, ItemShuffleResult
 from zora.generate.steps.shuffle_bomb_upgraders import shuffle_bomb_upgraders
 from zora.generate.steps.shuffle_dungeon_drops import shuffle_dungeon_drops, snapshot_shapes
 from zora.generate.steps.shuffle_items import shuffle_items
-from zora.generate.steps.change_money_or_life_toll import change_money_or_life_toll
+from zora.model.enums import (
+    BossSound,
+    BossSpriteSet,
+    Direction,
+    Enemy,
+    EnemySpriteSet,
+    Item,
+    RoomAction,
+    RoomType,
+    TollOption,
+    WallType,
+)
+from zora.model.levels import Level, LevelBlock
+from zora.model.rooms import EnemyInfo, ItemInfo, LayoutInfo, LifeOrMoneyToll, Room, StaircaseRoom, WallSet
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.rom.game_config import GameConfig, HintMode
+from zora.rom.parse.rom_file import load_rom, parse_rom
+from zora.rom.serialize.rom_file import serialize_to_rom
 from zora_measure.statistics import b1_checkpoint
-
 
 # Generated hint text is written as generated seeds write it (the extended bank), not into the
 # vanilla bank, which ZORA's wording outgrows.

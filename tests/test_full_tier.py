@@ -210,7 +210,7 @@ def test_a_quick_check_with_uncommitted_changes_records_nothing(stamped_repo: Pa
 
 OUTPUT_INPUTS = REPO / "scripts" / "output_inputs.py"
 # A stand-in for scripts/output_hash.py: its worker generates with zora/, its matrix's cases come from tests/
-OUTPUT_HASH_STAND_IN = '''def hash_seed():
+OUTPUT_HASH_STAND_IN = """def hash_seed():
     from zora import generate
 
 
@@ -220,7 +220,7 @@ def matrix_jobs():
 
 def main():
     pass
-'''
+"""
 
 
 @pytest.fixture

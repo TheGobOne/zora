@@ -7,22 +7,37 @@ from pathlib import Path
 
 import pytest
 
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora.rom.game_config import GameConfig, HintMode
-from zora.model.enums import (
-    BossSound, BossSpriteSet, Direction, Enemy, EnemySpriteSet, Item, ItemPosition, RoomAction, RoomType,
-)
-from zora.model.rooms import EnemyInfo, ItemInfo, LayoutInfo, Room
-from zora.model.levels import Level, LevelBlock
-from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.generate.rng import Rng, ScriptedRng
 from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng, ScriptedRng
 from zora.generate.shapes.options import ShapeOptions
 from zora.generate.steps.dungeon_room_shuffle import (
-    PROGRESSION_ITEMS, Contents, exchange_pool, exchange_rooms, is_stair_type, monster_refuses, put_contents,
-    second_drop_shuffle, takes_part,
+    PROGRESSION_ITEMS,
+    Contents,
+    exchange_pool,
+    exchange_rooms,
+    is_stair_type,
+    monster_refuses,
+    put_contents,
+    second_drop_shuffle,
+    takes_part,
 )
+from zora.model.enums import (
+    BossSound,
+    BossSpriteSet,
+    Direction,
+    Enemy,
+    EnemySpriteSet,
+    Item,
+    ItemPosition,
+    RoomAction,
+    RoomType,
+)
+from zora.model.levels import Level, LevelBlock
+from zora.model.rooms import EnemyInfo, ItemInfo, LayoutInfo, Room
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.rom.game_config import GameConfig, HintMode
+from zora.rom.parse.rom_file import load_rom, parse_rom
+from zora.rom.serialize.rom_file import serialize_to_rom
 
 NO_ITEM = 0x03
 POSITIONS = {1: [0x10, 0x20, 0x30, 0x40], 2: [0x40, 0x50, 0x60, 0x10]}

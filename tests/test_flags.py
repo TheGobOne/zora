@@ -12,41 +12,103 @@ import pytest
 # The spec tables are left out of releases (release/allowlist.txt): this file skips there.
 spec = pytest.importorskip("tests.flags_spec_fixture", reason="the spec tables are not in this tree")
 flags_spec_tables = pytest.importorskip("tests.flags_spec_tables", reason="the spec tables are not in this tree")
-from zora.flags.codec import ALPHABET, _format_base63, canonicalize, distinct_string_count
+from zora.flags.codec import (
+    ALPHABET,
+    FlagStringError,
+    _format_base63,
+    canonicalize,
+    decode,
+    distinct_string_count,
+    encode,
+)
 from zora.flags.dependencies import (
-    boss_hit_point_change, chosen_start_items, enemy_hit_point_change, magical_sword_hearts,
-    needs_monster_prerequisite, needs_room_prerequisite, piece_count_range, pieces_needed, start_item_limit, starting_hearts, starting_pieces,
+    UnresolvedError,
+    apply_dependencies,
+    boss_hit_point_change,
+    check_dependencies,
+    chosen_start_items,
+    enemy_hit_point_change,
+    generation_settings,
+    is_resolved,
+    magical_sword_hearts,
+    meet_cave_prerequisite,
+    missing_prerequisites,
+    needs_cave_prerequisite,
+    needs_monster_prerequisite,
+    needs_room_prerequisite,
+    piece_count_range,
+    pieces_needed,
+    refusals,
+    resolve,
+    start_item_limit,
+    starting_hearts,
+    starting_pieces,
     white_sword_hearts,
 )
 from zora.flags.fields import (
-    HINT_STYLE, INERT_TOGGLES, OPTIONS_BY_ID, OptionField, STARTING_HEARTS_RANDOM, START_SCREEN, ToggleField,
-)
-from zora.flags.presets import MVP_BASELINE, MVP_BASELINE_LEVEL_ENCODING_OFF, PRESETS, PUBLISHED_VARIANT_C
-from zora.flags.fields import (
-    ARMOS_PIN, BOMB_UPGRADE_PERSON_SHUFFLE, BOSS_HIT_POINTS, CAVE_SHUFFLE, COAST_PIN, DUNGEON_LAYOUT_SOURCE,
-    DUNGEON_MONSTER_SHUFFLE, DUNGEON_ROOM_SHUFFLE, ENEMY_HIT_POINTS, GANON_AND_ZELDA_SHUFFLE,
-    GANON_MUST_BE_BEATEN, HUNGRY_GORIYA_SHUFFLE, IMPORTANT_ITEMS_IN_LEVEL_9, LEVEL_9_REQUIREMENT,
-    MAGICAL_SWORD_HIGHEST, MAGICAL_SWORD_LOWEST, MONSTERS_BETWEEN_LEVELS, OPTION_FIELDS, PIECE_RANGE_HIGH,
-    PIECE_RANGE_LOW, PIN_FIELDS, START_ITEM_LIMIT, START_ROOM_MAY_MOVE, STARTING_HEARTS,
-    TAKE_ANY_ROAD_SHUFFLE, TOGGLE_FIELDS, ENCODE_LEVEL_DATA, WHITE_SWORD_CAVE_PIN, WHITE_SWORD_HIGHEST,
-    WHITE_SWORD_LOWEST, WOODEN_SWORD_CAVE_MOVES, WOODEN_SWORD_STATE, CaveShuffle, DungeonLayoutSource,
-    DungeonRoomShuffle, HitPointChange, Level9Requirement, PinnedItem, Settings, ThreeState,
+    ARMOS_PIN,
+    BOMB_UPGRADE_PERSON_SHUFFLE,
+    BOSS_HIT_POINTS,
+    CAVE_SHUFFLE,
+    COAST_PIN,
+    DUNGEON_LAYOUT_SOURCE,
+    DUNGEON_MONSTER_SHUFFLE,
+    DUNGEON_ROOM_SHUFFLE,
+    ENCODE_LEVEL_DATA,
+    ENEMY_HIT_POINTS,
+    GANON_AND_ZELDA_SHUFFLE,
+    GANON_MUST_BE_BEATEN,
+    HINT_STYLE,
+    HUNGRY_GORIYA_SHUFFLE,
+    IMPORTANT_ITEMS_IN_LEVEL_9,
+    INERT_TOGGLES,
+    LEVEL_9_REQUIREMENT,
+    MAGICAL_SWORD_HIGHEST,
+    MAGICAL_SWORD_LOWEST,
+    MONSTERS_BETWEEN_LEVELS,
+    OPTION_FIELDS,
+    OPTIONS_BY_ID,
+    PIECE_RANGE_HIGH,
+    PIECE_RANGE_LOW,
+    PIN_FIELDS,
+    START_ITEM_LIMIT,
+    START_ROOM_MAY_MOVE,
+    START_SCREEN,
+    STARTING_HEARTS,
+    STARTING_HEARTS_RANDOM,
+    TAKE_ANY_ROAD_SHUFFLE,
+    TOGGLE_FIELDS,
+    WHITE_SWORD_CAVE_PIN,
+    WHITE_SWORD_HIGHEST,
+    WHITE_SWORD_LOWEST,
+    WOODEN_SWORD_CAVE_MOVES,
+    WOODEN_SWORD_STATE,
+    CaveShuffle,
+    DungeonLayoutSource,
+    DungeonRoomShuffle,
+    HitPointChange,
+    Level9Requirement,
+    OptionField,
+    PinnedItem,
+    Settings,
+    ThreeState,
+    ToggleField,
     WoodenSwordState,
 )
-from zora.flags.codec import FlagStringError, decode, encode
+from zora.flags.presets import MVP_BASELINE, MVP_BASELINE_LEVEL_ENCODING_OFF, PRESETS, PUBLISHED_VARIANT_C
 from zora.flags.support import (
-    OWNER_TURN_OFF_TOGGLES, TURN_OFF_OPTIONS, TURN_OFF_TOGGLES, TURN_OFF_TOGGLES_NOT_RANDOM, Support,
+    OWNER_TURN_OFF_TOGGLES,
+    TURN_OFF_OPTIONS,
+    TURN_OFF_TOGGLES,
+    TURN_OFF_TOGGLES_NOT_RANDOM,
+    Support,
     is_fully_supported,
-    mvp_baseline_settings, support,
+    mvp_baseline_settings,
+    support,
     unsupported_fields,
 )
-from zora.flags.dependencies import (
-    UnresolvedError, apply_dependencies, check_dependencies, generation_settings,
-    is_resolved,
-    meet_cave_prerequisite, missing_prerequisites, needs_cave_prerequisite, refusals, resolve,
-)
 from zora.generate.alternative_values import AlternativeValues
-from zora.generate.pipeline import FlagsRefused, plan
+from zora.generate.pipeline import plan
 from zora.generate.rng import Rng
 
 PRESET_NAMES = flags_spec_tables.PRESET_NAMES

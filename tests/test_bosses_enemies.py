@@ -4,16 +4,15 @@ from pathlib import Path
 
 import pytest
 
+from zora.generate.context import GenerationResult
+from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng
+from zora.generate.shapes.bosses import boss_barred
+from zora.generate.shapes.options import ShapeOptions
+from zora.generate.shapes.tables import BOSS_COUNTS, LEVEL_BOSS_POOL, POOL_EXCLUSIONS
 from zora.model.game_world import GameWorld
 from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
 from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.generate.rng import Rng
-from zora.generate.shapes.bosses import boss_barred
-from zora.generate.errors import GenerationFailure
-from zora.generate.context import GenerationResult
-from zora.generate.generation_pass import generate_shapes
-from zora.generate.shapes.options import ShapeOptions
-from zora.generate.shapes.tables import BOSS_COUNTS, LEVEL_BOSS_POOL, POOL_EXCLUSIONS
 
 
 def _vanilla_gw() -> GameWorld:

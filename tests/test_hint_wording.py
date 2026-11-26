@@ -20,6 +20,7 @@ import pytest
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF
 from zora.generate.pipeline import generate_rom
 from zora.generate.steps import hint_text
+from zora.generate.steps.change_sword_hearts import MAGICAL_SWORD_HEARTS, WHITE_SWORD_HEARTS
 from zora.generate.steps.hint_text import (
     FOREIGN_NAME,
     ITEM_VERBS,
@@ -39,7 +40,6 @@ from zora.generate.steps.hint_text import (
     level_location_sentence,
     with_opener,
 )
-from zora.generate.steps.change_sword_hearts import MAGICAL_SWORD_HEARTS, WHITE_SWORD_HEARTS
 from zora.model.enums import Item
 from zora.rom.base_rom import BASE_ROM_PATH, remember_repo_base_rom
 from zora.rom.parse.rom_file import parse_rom

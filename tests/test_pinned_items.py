@@ -14,8 +14,8 @@ from zora.flags.dependencies import refusals
 from zora.flags.fields import ItemShuffleScope, OptionField, ThreeState
 from zora.flags.form import metadata
 from zora.flags.support import LEVEL_9_PINS, Support, support
-from zora.generate.steps.extra_pool_items import item_cellars
 from zora.generate.pipeline import Built, FlagsRefused, build, plan
+from zora.generate.steps.extra_pool_items import item_cellars
 from zora.generate.steps.shuffle_items import FORCED_ITEM_OPTIONS
 from zora.model.enums import Item
 from zora.model.levels import Level

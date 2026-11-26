@@ -5,23 +5,31 @@ from pathlib import Path
 
 import pytest
 
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora.model.enums import (
-    BossSound, BossSpriteSet, Direction, Enemy, EnemySpriteSet, Item, RoomAction, RoomType, Side,
-)
-from zora.model.rooms import EnemyInfo, LayoutInfo, Room, StaircaseRoom, WallSet
-from zora.model.game_world import GameWorld
-from zora.model.levels import Level, LevelBlock
-from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.generate.rng import Rng
+from zora.generate.boss_sounds import boss_sound_problems
+from zora.generate.generation_pass import generate_shapes
+from zora.generate.late_gate import walk
 from zora.generate.late_gate.blocks import GateBlock
 from zora.generate.late_gate.deal import _is_safe_seat, _redeal_contents
 from zora.generate.late_gate.fixes import _clear_exit_bits, _tail
-from zora.generate.late_gate import walk
-from zora.generate.boss_sounds import boss_sound_problems
-from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng
 from zora.generate.shapes.options import ShapeOptions
 from zora.generate.shapes.world import D_OPEN, D_SHUTTER, D_WALL, set_side, side_of
+from zora.model.enums import (
+    BossSound,
+    BossSpriteSet,
+    Direction,
+    Enemy,
+    EnemySpriteSet,
+    Item,
+    RoomAction,
+    RoomType,
+    Side,
+)
+from zora.model.game_world import GameWorld
+from zora.model.levels import Level, LevelBlock
+from zora.model.rooms import EnemyInfo, LayoutInfo, Room, StaircaseRoom, WallSet
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.rom.parse.rom_file import load_rom, parse_rom
 
 
 def _vanilla_rom() -> bytes:
@@ -208,8 +216,8 @@ def test_tail_write_on_a_staircase_clears_bits_only_when_serialized() -> None:
     7-5). The staircase keeps the rooms it leads to, so the map move, the
     acceptance walk and the hint probes still follow the link; the cleared
     bits appear in the bytes written to the ROM."""
-    from zora.rom.serialize.levels import _staircase_bytes
     from zora.generate.dungeon_walk import stair_partners
+    from zora.rom.serialize.levels import _staircase_bytes
     block = LevelBlock.blank()
     person = _person_room_at_row_end(block)
     block.room(0x6E).layout_info = LayoutInfo.from_layout_code(0x4E)

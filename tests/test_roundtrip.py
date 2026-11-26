@@ -11,17 +11,17 @@ from pathlib import Path
 
 import pytest
 
-from zora.model.game_world import GameWorld
 from zora.model.enums import Item, RoomType
-from zora.rom.parse.bin_files import load_bin_files_from_rom
-from zora.rom.parse.rom_file import load_rom, original_bins_from_rom, parse_rom
-from zora.rom.parse.game_world import parse_game_world
-from zora.rom.serialize.rom_file import serialize_to_rom
+from zora.model.game_world import GameWorld
+from zora.rom.base_rom import BASE_ROM_PATH as _DEFAULT_ROM
+from zora.rom.base_rom import verify_base_rom
 from zora.rom.layout import LEVEL_INFO_ADDRESS, LEVEL_INFO_SIZE
-from zora.rom.serialize.text import _serialize_quotes
+from zora.rom.parse.bin_files import load_bin_files_from_rom
+from zora.rom.parse.game_world import parse_game_world
+from zora.rom.parse.rom_file import load_rom, original_bins_from_rom, parse_rom
 from zora.rom.serialize.game_world import serialize_game_world
-
-from zora.rom.base_rom import BASE_ROM_PATH as _DEFAULT_ROM, verify_base_rom
+from zora.rom.serialize.rom_file import serialize_to_rom
+from zora.rom.serialize.text import _serialize_quotes
 
 
 def _vanilla_rom_path() -> Path | None:
@@ -142,12 +142,12 @@ def test_generated_world_preserves_non_dungeon_regions() -> None:
         pytest.skip("needs the base ROM")
     rom = load_rom(path)
     gw = parse_rom(rom)
-    from zora.generate.rng import Rng
     from zora.generate.generation_pass import generate_shapes
+    from zora.generate.rng import Rng
     from zora.generate.shapes.options import ShapeOptions
     generate_shapes(gw, Rng(31), ShapeOptions(), post_shapes=False)
     out = serialize_to_rom(gw, rom)
-    from zora.rom.layout import CAVE_ITEM_DATA_ADDRESS, LEVEL_INFO_ADDRESS, OVERWORLD_DATA_ADDRESS
+    from zora.rom.layout import CAVE_ITEM_DATA_ADDRESS, OVERWORLD_DATA_ADDRESS
     # everything outside the two grids, level info and the rooms' own regions
     # must be untouched by generation: check overworld + cave blocks.
     assert out[OVERWORLD_DATA_ADDRESS: OVERWORLD_DATA_ADDRESS + 0x300] ==         rom[OVERWORLD_DATA_ADDRESS: OVERWORLD_DATA_ADDRESS + 0x300]
@@ -215,9 +215,9 @@ def test_nothing_code_config_vanilla_is_default() -> None:
 def test_triforce_of_power_rule_units() -> None:
     """$0E is the TFoP only in a Ganon ($3E) room under ZORA_REMAP; a
     no-item room with trigger 7 is flagged; boss_sound round-trips."""
-    from zora_measure.checks import check_triforce_of_power
     from zora.model.enums import BossSound, Enemy, RoomAction
     from zora.rom.parse.levels import _parse_room
+    from zora_measure.checks import check_triforce_of_power
     ganon = _parse_room(0x42, 0, 0, 0x3E, 0x28, 0x8E, 0x03, nothing_code=0x0E)
     other = _parse_room(0x43, 0, 0, 0x01, 0x00, 0x2E, 0x00, nothing_code=0x0E)
     assert ganon.item == Item.TRIFORCE_OF_POWER and ganon.enemy == Enemy.THE_BEAST

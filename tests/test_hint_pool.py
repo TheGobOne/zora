@@ -9,23 +9,41 @@ from pathlib import Path
 import pytest
 
 from tests.needs import needs_base_rom
-from zora.rom.base_rom import BASE_ROM_PATH
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF
 from zora.generate.pipeline import generate_world, plan
-from zora.rom.parse.rom_file import parse_rom
-from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.rom.game_config import GameConfig, HintMode
-from zora.rom.layout import (
-    CONSTERNATION_HINT_SLOTS, EXT_HINT_DATA_ROM_END, EXT_HINT_DATA_ROM_START, EXTENDED_HINT_POINTERS,
-    HINT_TEXT_SPILL_FILL, QUOTE_DATA_ADDRESS, REFUSAL_TEXT_ADDRESS, hint_text_regions, place_hint_texts,
+from zora.generate.rng import Rng
+from zora.generate.steps.change_sword_hearts import MAGICAL_SWORD_HEARTS, WHITE_SWORD_HEARTS
+from zora.generate.steps.hint_text import (
+    BOOK_SLOT_0_CLASS,
+    PLACEHOLDER_TEXT,
+    POOL,
+    POOL_CLASSES,
+    POOL_FILE,
+    SLOT_COUNT,
+    UNSHOWN_SLOTS,
+    WOOD_SWORD_SLOT_0_CLASS,
+    PoolEntry,
+    encode_text,
+    place_pool,
+    quote_problems,
+    shown_class_slots,
 )
 from zora.model.overworld import Quote
-from zora.generate.steps.change_sword_hearts import MAGICAL_SWORD_HEARTS, WHITE_SWORD_HEARTS
-from zora.generate.rng import Rng
-from zora.generate.steps.hint_text import (
-    BOOK_SLOT_0_CLASS, PLACEHOLDER_TEXT, POOL, POOL_CLASSES, POOL_FILE, SLOT_COUNT, UNSHOWN_SLOTS,
-    WOOD_SWORD_SLOT_0_CLASS, PoolEntry, encode_text, place_pool, quote_problems, shown_class_slots,
+from zora.rom.base_rom import BASE_ROM_PATH
+from zora.rom.game_config import GameConfig, HintMode
+from zora.rom.layout import (
+    CONSTERNATION_HINT_SLOTS,
+    EXT_HINT_DATA_ROM_END,
+    EXT_HINT_DATA_ROM_START,
+    EXTENDED_HINT_POINTERS,
+    HINT_TEXT_SPILL_FILL,
+    QUOTE_DATA_ADDRESS,
+    REFUSAL_TEXT_ADDRESS,
+    hint_text_regions,
+    place_hint_texts,
 )
+from zora.rom.parse.rom_file import parse_rom
+from zora.rom.serialize.rom_file import serialize_to_rom
 
 BANK = EXT_HINT_DATA_ROM_END - EXT_HINT_DATA_ROM_START
 HINT_TEXT_SPILL_START = QUOTE_DATA_ADDRESS + 2 * CONSTERNATION_HINT_SLOTS
@@ -108,7 +126,7 @@ def test_no_community_text_assumes_the_players_gender() -> None:
 def test_the_pools_longest_texts_always_fit_the_hint_bank_and_its_overflow() -> None:
     """Total bytes: whatever the draws, the 45 slots' pool texts fit the extended bank and the old
     text area after it (HT-TEXT-03), even when every slot draws the longest text it can."""
-    longest = {slot: 0 for slot in SHOWN_SLOTS}
+    longest = dict.fromkeys(SHOWN_SLOTS, 0)
     for entry in POOL:
         if not entry.reserved and entry.routing_class not in SERVED_BY_OTHERS:
             size = len(encode_text(list(entry.lines)))

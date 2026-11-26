@@ -10,9 +10,6 @@ from typing import Any
 import pytest
 
 from tests import visualizer_crosscheck
-from zora_web.api import seed_report
-from zora_export.seed_document import EncodedSeedRefused, seed_document, seed_document_for
-from zora_export.spoiler_log import MAJOR_ITEMS, WIDTH, spoiler_file_name, spoiler_log
 from zora.flags.codec import decode, encode
 from zora.flags.fields import ThreeState
 from zora.flags.presets import MVP_BASELINE, MVP_BASELINE_LEVEL_ENCODING_OFF
@@ -21,6 +18,9 @@ from zora.model import room_grid
 from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
 from zora.rom.player_settings import PlayerSettings
 from zora.version import player_version
+from zora_export.seed_document import EncodedSeedRefused, seed_document, seed_document_for
+from zora_export.spoiler_log import MAJOR_ITEMS, WIDTH, spoiler_file_name, spoiler_log
+from zora_web.api import seed_report
 
 jsonschema = pytest.importorskip("jsonschema")
 pytestmark = pytest.mark.skipif(not BASE_ROM_PATH.exists(), reason="needs the base ROM")

@@ -8,15 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from zora.flags import form as flag_form
-from zora.flags import codec
-from zora.flags import dependencies
+from zora.flags import codec, dependencies, support, zora_flags
 from zora.flags import fields as flags_fields
+from zora.flags import form as flag_form
 from zora.flags import presets as flags_presets
-from zora.flags import support
-from zora.rom import level_encoding
-from zora.flags import zora_flags
 from zora.flags.fields import Level9Requirement, OptionField, ThreeState, ToggleField
+from zora.rom import level_encoding
 
 REPO = Path(__file__).resolve().parent.parent
 WORKER = REPO / "web" / "zora-worker.js"

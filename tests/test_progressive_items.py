@@ -13,7 +13,15 @@ from zora.flags.fields import ThreeState
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF
 from zora.generate.pipeline import generate_world, plan
 from zora.generate.steps.hint_text import (
-    ITEM_NAMES, LINE_WIDTH, POOL, PROGRESSIVE_NAMES, UPGRADE_LINES, VANILLA_NAMES, Form, Requirement, item_name,
+    ITEM_NAMES,
+    LINE_WIDTH,
+    POOL,
+    PROGRESSIVE_NAMES,
+    UPGRADE_LINES,
+    VANILLA_NAMES,
+    Form,
+    Requirement,
+    item_name,
     requirement_text,
 )
 from zora.generate.steps.item_shuffle_result import shop_of_slot

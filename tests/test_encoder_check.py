@@ -15,7 +15,7 @@ from tests.encoder_check import HIDE_ENV, RECORD_ENV, read_records
 from zora.rom import level_encoding
 
 REPO = Path(__file__).resolve().parent.parent
-PROBE = '''import pytest
+PROBE = """import pytest
 
 from zora.flags.presets import MVP_BASELINE
 from zora.generate.pipeline import plan
@@ -29,7 +29,7 @@ def test_unguarded() -> None:
 @pytest.mark.skipif(not level_encoding.is_available(), reason="needs the encoder")
 def test_guarded() -> None:
     assert plan(MVP_BASELINE, 1).config.level_encoding is not None
-'''
+"""
 
 UNGUARDED = "def test_unguarded() -> None:\n    assert plan(MVP_BASELINE, 1).config.level_encoding is not None\n"
 assert UNGUARDED in PROBE

@@ -9,6 +9,7 @@ import pytest
 
 from tests.emulator import ITEMS, OBJ_STATE, OBJ_X, ROOM_ID, ROOM_ITEM_SLOT, Button
 from tests.test_progressive_emulator import (
+    ARROW,
     BOOMERANG,
     CANDLE,
     COAST_SCREEN,
@@ -23,7 +24,6 @@ from tests.test_progressive_emulator import (
     SHOP_WARE,
     SWORD,
     WOODEN_SWORD,
-    ARROW,
     Game,
     Line,
     armos,

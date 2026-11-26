@@ -4,25 +4,36 @@ from pathlib import Path
 
 import pytest
 
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora.model.enums import Enemy
-from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.rom.game_config import GameConfig, HintMode
-from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.generate.rng import Rng
 from zora.generate.generation_pass import generate_shapes
-from zora.generate.steps.randomize_boss_groups import (
-    BLOCK_FREE_TILES, BOSS_ORDER, BOSSES, COMMON_BLOCK_TILES, SPECIAL_CANDIDATES,
-    deal_bosses, is_boss_pick_barred, packed_slots,
-)
-from zora.generate.steps.group_banks import GROUPS
-from zora.rom.archipelago_logo import LOGO_BACKGROUND_TILES
-from zora.generate.steps.shuffle_enemy_groups import (
-    GROUP_START_TOTALS, GROUP_TILE_LIMIT, OVERWORLD_BARRED, SEED_GROUPS, counted_cost, deal_enemies,
-    pack_enemies, redraw_excess_zols,
-)
-from zora.generate.steps.group_banks import OVERWORLD, Staged
+from zora.generate.rng import Rng
 from zora.generate.shapes.options import ShapeOptions
+from zora.generate.steps.group_banks import GROUPS, OVERWORLD, Staged
+from zora.generate.steps.randomize_boss_groups import (
+    BLOCK_FREE_TILES,
+    BOSS_ORDER,
+    BOSSES,
+    COMMON_BLOCK_TILES,
+    SPECIAL_CANDIDATES,
+    deal_bosses,
+    is_boss_pick_barred,
+    packed_slots,
+)
+from zora.generate.steps.shuffle_enemy_groups import (
+    GROUP_START_TOTALS,
+    GROUP_TILE_LIMIT,
+    OVERWORLD_BARRED,
+    SEED_GROUPS,
+    counted_cost,
+    deal_enemies,
+    pack_enemies,
+    redraw_excess_zols,
+)
+from zora.model.enums import Enemy
+from zora.rom.archipelago_logo import LOGO_BACKGROUND_TILES
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.rom.game_config import GameConfig, HintMode
+from zora.rom.parse.rom_file import load_rom, parse_rom
+from zora.rom.serialize.rom_file import serialize_to_rom
 
 E = Enemy
 

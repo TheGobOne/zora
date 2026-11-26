@@ -12,22 +12,32 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 from scripts.music_assets import assets_available, music_folder, pinned_assets
+from zora.flags import zora_flags
+from zora.flags.fields import ThreeState
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF
 from zora.generate.pipeline import generate_rom
 from zora.rom.base_rom import BASE_ROM_PATH, PRG1_ROM_PATH, remember_repo_base_rom
-from zora.flags import zora_flags
-from zora.flags.fields import ThreeState
 from zora.rom.music import json5, randomize
 from zora.rom.music.importer import AREA_SONGS, LOZFT2, MODULE_ADDRESSES, BankLayout, Placed, RomFull, pack_songs
-from zora.rom.music.library import (DUNGEON, ENDING, LAST_DUNGEON, ORIGINAL_SONGS, OVERWORLD, TITLE, LibraryError,
-                                    USES, LibraryFile, MusicError,
-                                    library_songs, module_data, read_library)
+from zora.rom.music.library import (
+    DUNGEON,
+    ENDING,
+    LAST_DUNGEON,
+    ORIGINAL_SONGS,
+    OVERWORLD,
+    TITLE,
+    USES,
+    LibraryError,
+    LibraryFile,
+    MusicError,
+    library_songs,
+    module_data,
+    read_library,
+)
 from zora.rom.music.lozft import LOZFT_ROM_SIZE, LozftUnavailable, with_lozft_from_source
 from zora.rom.music.pin import MusicAssets, MusicAssetsInvalid
 from zora.rom.music.playlist import AREA_KEYS, ORIGINAL_TITLES, PlaylistError, parse_playlist
 from zora.rom.music.randomize import MusicOptions, MusicSource, options_for, randomize_music
-from zora_web.api import music_library_songs, music_playlist_areas
-from zora.rom.revision import identify_rom
 from zora.rom.player_settings import (
     Music,
     PlayerSettingError,
@@ -35,6 +45,8 @@ from zora.rom.player_settings import (
     parse_player_settings,
     player_settings_from_page,
 )
+from zora.rom.revision import identify_rom
+from zora_web.api import music_library_songs, music_playlist_areas
 
 if TYPE_CHECKING:
     from tests.emulator import Emulator
@@ -418,7 +430,7 @@ def test_a_playlist_that_cannot_be_used_is_refused(music_zora_rom: bytes, assets
     refusals = {
         '{ tracks: { overworld: "No Such Song" } }': "no song",
         '{ tracks: { castle: "original" } }': "no area",
-        '{ version: 2, tracks: {} }': "version",
+        "{ version: 2, tracks: {} }": "version",
         f'{{ tracks: {{ level1: "{unsafe}" }} }}': "unsafe for streaming",
     }
     for text, message in refusals.items():

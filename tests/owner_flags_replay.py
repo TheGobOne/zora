@@ -15,12 +15,12 @@ from zora.flags.zora_flags import L4Sword
 from zora.generate.acceptance_check import AcceptanceCheck
 from zora.generate.pipeline import extra_options, generate_world, overworld_gates, plan
 from zora.generate.steps.item_shuffle_result import EXTRA_SLOT_CAVES, shop_of_slot
-from zora_measure.owner_flags import owner_flag_problems
 from zora.model.enums import Destination, Item
 from zora.model.game_world import GameWorld
 from zora.model.overworld import ItemCave, OverworldItem, Shop
 from zora.rom.parse.rom_file import parse_rom
 from zora.rom.serialize.rom_file import serialize_to_rom
+from zora_measure.owner_flags import owner_flag_problems
 
 CAVE_SLOT_DESTINATIONS = {"armos": Destination.ARMOS_ITEM, "white_sword": Destination.WHITE_SWORD_CAVE,
                           "coast": Destination.COAST_ITEM}

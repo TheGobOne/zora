@@ -23,7 +23,7 @@ SETTINGS: dict[str, Any] = {
     "zora_flags": "",
     "player_settings": {"selectButton": "toggle", "cropGuide": "off", "greenTunic": 41, "levelWord": "LAIR",
                         "bossSoundWord": "ROAR"},
-    "custom_presets": [{"name": "Race: \"fast\" # 1", "flags": "AAAA?!", "zoraFlags": "B"}, None,
+    "custom_presets": [{"name": 'Race: "fast" # 1', "flags": "AAAA?!", "zoraFlags": "B"}, None,
                        {"name": "Ünïcode 'quoted'", "flags": "CCCC", "zoraFlags": ""}, None, None, None, None, None],
     "player_name": "Link",
     "theme": "dark",
@@ -126,7 +126,7 @@ def test_the_same_saved_again_by_another_yaml_tool_is_read() -> None:
 
 def test_hand_edits_are_read() -> None:
     edited = FORMAT_1_FILE.replace('mode: "multiworld"', "mode: single   # back to one player").replace(
-        "  greenTunic: 41", "  greenTunic: 0x2A").replace('theme: null', "theme:")
+        "  greenTunic: 41", "  greenTunic: 0x2A").replace("theme: null", "theme:")
     settings = read(edited)
     assert (settings["mode"], settings["player_settings"]["greenTunic"], settings["theme"]) == ("single", 0x2A, None)
 

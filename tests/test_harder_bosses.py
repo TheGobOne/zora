@@ -4,9 +4,9 @@ import pytest
 
 from tests.needs import needs_base_rom
 from zora.flags import zora_flags
+from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF
 from zora.flags.zora_flags import HarderLevel, ZoraFlags
 from zora.generate.pipeline import build, finish, plan
-from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF
 from zora.rom import harder_bosses as hb
 from zora.rom.base_rom import piece_bytes, remember_repo_base_rom
 from zora.rom.flags2_patch_data import PATCHES

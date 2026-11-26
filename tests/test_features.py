@@ -2,14 +2,14 @@
 import pytest
 
 from tests.needs import needs_base_rom
-from zora.rom.base_rom import verify_base_rom
-from zora.rom.parse.rom_file import load_rom, parse_rom
+from zora.generate.generation_pass import generate_shapes
 from zora.generate.rng import Rng
+from zora.generate.shapes.options import ShapeOptions
 from zora.model.enums import Destination
 from zora.model.game_world import GameWorld
 from zora.model.overworld import ItemCave, MoneyMakingGameCave
-from zora.generate.generation_pass import generate_shapes
-from zora.generate.shapes.options import ShapeOptions
+from zora.rom.base_rom import verify_base_rom
+from zora.rom.parse.rom_file import load_rom, parse_rom
 
 
 @pytest.fixture

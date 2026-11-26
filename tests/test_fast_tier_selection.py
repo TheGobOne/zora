@@ -8,7 +8,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 PROBE_CONFTEST = "from tests.conftest import pytest_collection_modifyitems  # noqa: F401\n"
-PROBE = '''import pytest
+PROBE = """import pytest
 
 
 @pytest.mark.parametrize("seed", [3, 1, 2])
@@ -40,7 +40,7 @@ def test_one_seed(seed: int) -> None:
 @pytest.mark.parametrize("level", [1, 2])
 def test_not_seeds(level: int) -> None:
     pass
-'''
+"""
 FULL_TIER = {"test_probe.py::test_sweep[1]", "test_probe.py::test_sweep[2]", "test_probe.py::test_sweep_of_params[8]",
              "test_probe.py::test_cases_by_seed[2-a]", "test_probe.py::test_cases_by_seed[2-b]"}
 

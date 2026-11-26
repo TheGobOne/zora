@@ -8,7 +8,6 @@ from typing import Any, ClassVar
 
 from Fill import distribute_items_restrictive
 
-from . import ZoraTestBase
 from ..names import BOMB_UPGRADE, BOOTS_UPGRADE, LINE_OF, LOCATION_NAME_TO_ID, ItemNaming, zora_names
 from ..options import OPTION_CLASSES, SETTING_CLASSES
 from ..zora.flags.zora_flags import Pacing
@@ -18,6 +17,7 @@ from ..zora.generate.pipeline import extra_options
 from ..zora.generate.places import CELLAR_SUFFIX, ROOM_SUFFIX
 from ..zora.generate.steps.mixed_overworld_quest import SHOWN
 from ..zora.model.enums import Item, RoomType
+from . import ZoraTestBase
 
 # Expanded Dungeon Locations' seeds run while the world offers it: held back again (owner, 2026-10-18)
 # until an Expanded Brackets 2nd Quest seed's fix and its rescan, they come back on their own.

@@ -72,13 +72,13 @@ def seed_hash(args: tuple[int, bool]) -> str:
     seed, post_shapes = args
     import zora
     check_code_dir(zora)
+    from zora.generate.generation_pass import generate_shapes
+    from zora.generate.rng import Rng
+    from zora.generate.shapes.options import ShapeOptions
     from zora.rom.base_rom import verify_base_rom
     from zora.rom.game_config import GameConfig, HintMode
     from zora.rom.parse.rom_file import load_rom, parse_rom
     from zora.rom.serialize.rom_file import serialize_to_rom
-    from zora.generate.rng import Rng
-    from zora.generate.generation_pass import generate_shapes
-    from zora.generate.shapes.options import ShapeOptions
     base = load_rom(verify_base_rom(BASE_ROM))
     if post_shapes and _has_flag_generation():
         # The full output from the MVP baseline flag string, level encoding off
@@ -197,6 +197,7 @@ def matrix_hash(job: MatrixJob) -> tuple[str, dict[str, str]]:
 def _has_zora_field(name: str) -> bool:
     """Whether the revision being hashed has this ZORA flag."""
     import dataclasses
+
     from zora.flags.zora_flags import ZoraFlags
     return name in {field.name for field in dataclasses.fields(ZoraFlags)}
 

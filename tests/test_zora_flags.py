@@ -6,14 +6,30 @@ from itertools import product
 import pytest
 
 from zora.flags import zora_flags
-from zora.flags.codec import FlagStringError, decode as decode_z1r
+from zora.flags.codec import FlagStringError
+from zora.flags.codec import decode as decode_z1r
 from zora.flags.fields import (
-    MAGICAL_SWORD_HIGHEST, MAGICAL_SWORD_LOWEST, STARTING_HEARTS, STARTING_HEARTS_RANDOM, ThreeState,
+    MAGICAL_SWORD_HIGHEST,
+    MAGICAL_SWORD_LOWEST,
+    STARTING_HEARTS,
+    STARTING_HEARTS_RANDOM,
+    ThreeState,
 )
 from zora.flags.presets import MVP_BASELINE, MVP_BASELINE_LEVEL_ENCODING_OFF
 from zora.flags.zora_flags import (
-    DEFAULT, HEARTS_CAP_CHOICES, REDRAW_SWORD_HEARTS, ZoraFlags, ZoraFlagStringError, canonicalize, decode,
-    encode, generation_seed, level_encoding_text, magical_sword_heart_range, starting_heart_containers, validate,
+    DEFAULT,
+    HEARTS_CAP_CHOICES,
+    REDRAW_SWORD_HEARTS,
+    ZoraFlags,
+    ZoraFlagStringError,
+    canonicalize,
+    decode,
+    encode,
+    generation_seed,
+    level_encoding_text,
+    magical_sword_heart_range,
+    starting_heart_containers,
+    validate,
 )
 
 BASELINE = decode_z1r(MVP_BASELINE)

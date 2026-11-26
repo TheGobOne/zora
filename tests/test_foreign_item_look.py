@@ -23,8 +23,8 @@ from tests.test_archipelago_interface import by_name
 from tests.test_assignment_emulator import CAVE_ITEM_IDS, HEART_VALUES, INV_RUPEES, Console, floor_room
 from tests.test_progressive_emulator import NO_ITEM
 from zora import archipelago
-from zora.generate.finish import FOREIGN, LOGO_SHOP_FAIRY_PRICES, ForeignLook
 from zora.generate import pipeline
+from zora.generate.finish import FOREIGN, LOGO_SHOP_FAIRY_PRICES, ForeignLook
 from zora.generate.places import PlaceKind, _screens, read_item
 from zora.generate.steps.group_banks import OVERWORLD
 from zora.generate.steps.randomize_boss_groups import packed_slots

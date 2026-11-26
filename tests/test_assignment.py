@@ -29,7 +29,6 @@ from zora.rom.code_patches import (
     STATS_SEED_DIGITS,
 )
 from zora.rom.game_config import DungeonNothingCode, GameConfig
-from zora.rom.owner_patches import archipelago_patch_writes
 from zora.rom.layout import (
     ARMOS_ITEM_ADDRESS,
     ASM_NOTHING_CODE_PATCH_OFFSET,
@@ -41,6 +40,7 @@ from zora.rom.layout import (
     LEVEL_7_9_DATA_ADDRESS_Q2,
     LEVEL_TABLE_SIZE,
 )
+from zora.rom.owner_patches import archipelago_patch_writes
 from zora.rom.parse.rom_file import parse_rom
 
 SEEDS = (1, 2, 3, 4)
@@ -164,7 +164,7 @@ def test_foreign_items_show_as_rupees(base: bytes) -> None:
 # --- test 9: exclusions and restrictions (R2) --------------------------------------------------
 
 def test_the_exclusion_is_vareg20s_own_rule() -> None:
-    assert getattr(places_module, "is_last_boss_room") is move_last_boss_room_items.is_last_boss_room
+    assert places_module.is_last_boss_room is move_last_boss_room_items.is_last_boss_room
 
 
 @pytest.mark.parametrize("seed", SEEDS)

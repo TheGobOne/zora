@@ -8,7 +8,12 @@ from zora import archipelago
 from zora.generate.finish import FOREIGN as FOREIGN_VALUE
 from zora.generate.finish import hinted_foreign_places
 from zora.generate.steps.hint_text import (
-    Form, ItemNames, Requirement, has_shown_character, item_location_sentence, requirement_text,
+    Form,
+    ItemNames,
+    Requirement,
+    has_shown_character,
+    item_location_sentence,
+    requirement_text,
 )
 from zora.rom.base_rom import BASE_ROM_PATH
 
@@ -48,7 +53,7 @@ def place(name: str, level: int | None = None) -> SimpleNamespace:
 
 PLACES = [place("L1 a", 1), place("L1 b", 1), place("L2 a", 2), place("L3 a", 3), place("Coast"),
           place("White Sword Cave"), place("Elsewhere")]
-OWNERS = {name: ("GOB", "HAMMER") for name in ("L1 a", "L1 b", "L2 a", "L3 a", "Coast", "White Sword Cave", "Elsewhere")}
+OWNERS = dict.fromkeys(("L1 a", "L1 b", "L2 a", "L3 a", "Coast", "White Sword Cave", "Elsewhere"), ("GOB", "HAMMER"))
 ALL_FOREIGN = {p.name: FOREIGN_VALUE for p in PLACES}
 
 
@@ -92,7 +97,7 @@ def test_recipe_rebuild_matches_generation() -> None:
     for name in places[:2]:
         received.append(assignment[name])
         assignment[name] = archipelago.FOREIGN
-    owners = {name: ("Gob-Z2", "HAMMER") for name in places[:2]}
+    owners = dict.fromkeys(places[:2], ("Gob-Z2", "HAMMER"))
     generated = archipelago.finish(result, assignment, received, None, ap_name=b"ZORA1_test", foreign_owners=owners)
     recipe = archipelago.recipe(result, assignment, received, None, ap_name=b"ZORA1_test", foreign_owners=owners)
     assert set(recipe["foreignOwners"]) <= set(places[:2])

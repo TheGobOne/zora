@@ -6,26 +6,28 @@ from pathlib import Path
 
 import pytest
 
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora.model.levels import GANON_LIST, ZELDA_LIST
-from zora.model.enums import BossSpriteSet
-from zora.model.game_world import GameWorld
-from zora.model.rooms import RoomPlace
-from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.rom.game_config import GameConfig, HintMode
-from zora.rom.serialize.rom_file import serialize_to_rom
+from zora.generate.generation_pass import generate_shapes
 from zora.generate.rng import Rng, ScriptedRng
 from zora.generate.shapes.enemies import monster_barred
-from zora.generate.generation_pass import generate_shapes
 from zora.generate.shapes.options import ShapeOptions
+from zora.generate.shapes.tables import GLEEOK4_EXTRA_BAD, GLEEOK_BAD_LAYOUTS
+from zora.generate.steps.monster_lists import MonsterShuffleResult
 from zora.generate.steps.shuffle_bosses import BOSS_TIER_WEIGHT, draw_boss_tier
 from zora.generate.steps.shuffle_dungeon_monsters import (
-    GANON_BAD_LAYOUTS, ZELDA_BAD_LAYOUTS, _Room, is_swap_allowed,
+    GANON_BAD_LAYOUTS,
+    ZELDA_BAD_LAYOUTS,
+    _Room,
+    is_swap_allowed,
 )
-from zora.generate.steps.monster_lists import MonsterShuffleResult
 from zora.generate.steps.shuffle_monsters_between_levels import deal_enemy_banks
-from zora.generate.shapes.tables import GLEEOK4_EXTRA_BAD, GLEEOK_BAD_LAYOUTS
-
+from zora.model.enums import BossSpriteSet
+from zora.model.game_world import GameWorld
+from zora.model.levels import GANON_LIST, ZELDA_LIST
+from zora.model.rooms import RoomPlace
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.rom.game_config import GameConfig, HintMode
+from zora.rom.parse.rom_file import load_rom, parse_rom
+from zora.rom.serialize.rom_file import serialize_to_rom
 
 
 def _vanilla_rom() -> bytes:

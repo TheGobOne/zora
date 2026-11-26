@@ -1,10 +1,17 @@
 """Level-block model: one cell per room number, levels as views, and the
 block encoder (SH-STAIR-09 fallout, SH-GRID-17, A43)."""
 from zora.model.enums import (
-    BossSpriteSet, Direction, Enemy, EnemySpriteSet, Item, RoomAction, RoomType, WallType,
+    BossSpriteSet,
+    Direction,
+    Enemy,
+    EnemySpriteSet,
+    Item,
+    RoomAction,
+    RoomType,
+    WallType,
 )
-from zora.model.rooms import EnemyInfo, ItemInfo, LayoutInfo, Room, SecretInfo, StaircaseRoom, WallSet
 from zora.model.levels import Level, LevelBlock
+from zora.model.rooms import EnemyInfo, ItemInfo, LayoutInfo, Room, SecretInfo, StaircaseRoom, WallSet
 from zora.rom.layout import LEVEL_TABLE_SIZE
 from zora.rom.serialize.levels import encode_level_block
 

@@ -95,7 +95,7 @@ def test_the_buttons_follow_each_generated_seed() -> None:
     on_generate = page_function("onGenerate")
     assert "addCopyButtons({ version: buildLabel(), seed: result.seed, flags: requested.flags," in on_generate
     # the build's full label (version, date and commit), though the regular page's pill shows the version alone
-    assert "return EMBEDDED_INFO?.build || $(\"version\").textContent;" in page_function("buildLabel")
+    assert 'return EMBEDDED_INFO?.build || $("version").textContent;' in page_function("buildLabel")
     assert "zoraFlags: requested.zoraFlags, identity: romIdentity, code," in on_generate
     assert "encoded: requested.encoded, spoilerLevel: requested.spoilerLevel, notices: requested.notices," \
            in on_generate

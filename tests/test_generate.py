@@ -5,22 +5,21 @@ import pytest
 
 from tests.needs import needs_base_rom
 from zora.flags.codec import decode, encode
-from zora.flags.fields import COAST_PIN, PinnedItem
+from zora.flags.dependencies import RESOLVED_TOGGLES
+from zora.flags.fields import COAST_PIN, TOGGLE_FIELDS, PinnedItem, ThreeState
 from zora.flags.presets import MVP_BASELINE, MVP_BASELINE_LEVEL_ENCODING_OFF
+from zora.flags.support import ENCODE_LEVEL_DATA_RANDOM_NOTICE
+from zora.generate import pipeline
+from zora.generate.generation_pass import generate_shapes
+from zora.generate.pipeline import SEED_LIMIT, FlagsRefused, SeedRefused, build, finish, generate_rom, plan
+from zora.generate.rng import Rng
+from zora.generate.shapes.options import ShapeOptions
 from zora.rom import level_encoding
 from zora.rom.base_rom import BASE_ROM_PATH, remember_repo_base_rom, verify_base_rom
-from zora.flags.dependencies import RESOLVED_TOGGLES
-from zora.flags.fields import TOGGLE_FIELDS, ThreeState
-from zora.flags.support import ENCODE_LEVEL_DATA_RANDOM_NOTICE
 from zora.rom.game_config import GameConfig, HintMode
-from zora.generate import pipeline
-from zora.generate.pipeline import SEED_LIMIT, FlagsRefused, SeedRefused, build, finish, generate_rom, plan
 from zora.rom.parse.rom_file import load_rom, parse_rom
 from zora.rom.player_settings import PlayerSettings, apply_player_settings
 from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.generate.rng import Rng
-from zora.generate.generation_pass import generate_shapes
-from zora.generate.shapes.options import ShapeOptions
 
 
 def _base() -> bytes:

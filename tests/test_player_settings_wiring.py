@@ -17,22 +17,30 @@ import pytest
 
 from tests.emulator import Button, Emulator
 from tests.test_feature_patches import BOOMERANG_SLOT, HOT_KEY_LABEL, INVENTORY_HEADING
+from tests.test_link_art import PEOPLE_FOLDER
 from tests.test_player_settings import _armed_start, _select_presses
-from zora_web.api import player_settings_from_page
 from zora.flags.presets import MVP_BASELINE, MVP_BASELINE_LEVEL_ENCODING_OFF
 from zora.generate.pipeline import generate_rom, generate_world, plan
 from zora.rom import level_encoding
 from zora.rom.base_rom import piece_bytes, verify_base_rom
 from zora.rom.code_patches import SEED_CODE_ADDRESS, SEED_CODE_LENGTH, seed_code
 from zora.rom.layout import LEVEL_LABEL_RECORD, LEVEL_LABEL_RECORD_SIZE, LOW_HEALTH_BEEP_OPERAND_ADDRESS
-from tests.test_link_art import PEOPLE_FOLDER
 from zora.rom.link_art import art_set_from_file
 from zora.rom.link_sprite import SpriteSet
 from zora.rom.player_settings import (
-    CharacterColors, DeathWarp, LinkSprite, LowHealthBeep, Music, PlayerSettingError, PlayerSettings, SelectSwap,
-    apply_player_settings, written_offsets,
+    CharacterColors,
+    DeathWarp,
+    LinkSprite,
+    LowHealthBeep,
+    Music,
+    PlayerSettingError,
+    PlayerSettings,
+    SelectSwap,
+    apply_player_settings,
+    written_offsets,
 )
 from zora.rom.serialize.rom_file import serialize_to_rom
+from zora_web.api import player_settings_from_page
 
 REPO = Path(__file__).resolve().parent.parent
 SEEDS = (1, 2, 3)

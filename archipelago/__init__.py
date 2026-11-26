@@ -18,8 +18,7 @@ from BaseClasses import Item, ItemClassification, Location, MultiWorld, Region, 
 from worlds.AutoWorld import WebWorld, World
 
 from .client import ZoraClient  # noqa: F401  registers the BizHawk client
-from .names import (FILLER_ITEMS, GIVEN_AS, HEART_CONTAINER, ITEM_NAME_TO_ID, LOCATION_NAME_TO_ID, ItemNaming,
-                    zora_names)
+from .names import FILLER_ITEMS, GIVEN_AS, HEART_CONTAINER, ITEM_NAME_TO_ID, LOCATION_NAME_TO_ID, ItemNaming, zora_names
 from .options import ZoraOptions, player_settings, zora_values
 from .rom import GAME, ZoraProcedurePatch, ZoraSettings, base_rom_bytes
 from .rules import state_rule

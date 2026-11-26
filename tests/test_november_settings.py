@@ -10,7 +10,20 @@ from functools import cache
 
 import pytest
 
-from tests.emulator import CUR_LEVEL, GAME_MODE, GAME_SUBMODE, ITEMS, OBJ_STATE, OBJ_TYPE, OBJ_X, OBJ_Y, ROOM_ID, Button, Emulator, Mode
+from tests.emulator import (
+    CUR_LEVEL,
+    GAME_MODE,
+    GAME_SUBMODE,
+    ITEMS,
+    OBJ_STATE,
+    OBJ_TYPE,
+    OBJ_X,
+    OBJ_Y,
+    ROOM_ID,
+    Button,
+    Emulator,
+    Mode,
+)
 from tests.test_assignment_emulator import ENTER_ROOM_MODE, IS_UPDATING_MODE, MONSTER_SLOTS
 from zora.flags import codec
 from zora.flags.fields import HitPointChange, ThreeState

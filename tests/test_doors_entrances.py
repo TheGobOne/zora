@@ -1,16 +1,15 @@
 """Tests for doors (SH-DOOR) and entrances (SH-ENT)."""
-from zora.model import room_grid
+from zora.generate.errors import GenerationFailure
 from zora.generate.rng import Rng
-from zora.model.room_grid import neighbor
 from zora.generate.shapes.doors import place_doors
 from zora.generate.shapes.entrances import place_entrances
 from zora.generate.shapes.gridgen import grow_set
 from zora.generate.shapes.numbering import number_with_frees
 from zora.generate.shapes.options import ShapeOptions
-from zora.generate.errors import GenerationFailure
 from zora.generate.shapes.world import GRID_ROWS, SetWorld
+from zora.model import room_grid
 from zora.model.enums import Side
-
+from zora.model.room_grid import neighbor
 
 
 def _build(seed: int, six: bool) -> SetWorld:

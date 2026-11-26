@@ -14,8 +14,8 @@ from zora.generate.steps.hint_text import (
     Requirement,
     name_form,
     person_name,
-    sprite_form,
     requirement_text,
+    sprite_form,
 )
 from zora.generate.steps.person_appearances import (
     CAVE_PERSON_TYPES,

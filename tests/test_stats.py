@@ -1,9 +1,16 @@
 """Tests for zora_measure/statistics.py on synthetic levels."""
 from zora.model.enums import (
-    BossSpriteSet, Direction, Enemy, EnemySpriteSet, Item, RoomAction, RoomType, WallType,
+    BossSpriteSet,
+    Direction,
+    Enemy,
+    EnemySpriteSet,
+    Item,
+    RoomAction,
+    RoomType,
+    WallType,
 )
-from zora.model.rooms import EnemyInfo, ItemInfo, LayoutInfo, Room, SecretInfo, StaircaseRoom, WallSet
 from zora.model.levels import Level, LevelBlock
+from zora.model.rooms import EnemyInfo, ItemInfo, LayoutInfo, Room, SecretInfo, StaircaseRoom, WallSet
 from zora_measure.statistics import level_stats
 
 W = WallType.SOLID_WALL

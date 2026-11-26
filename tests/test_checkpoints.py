@@ -5,15 +5,15 @@ from pathlib import Path
 
 import pytest
 
+from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng
+from zora.generate.shapes.options import ShapeOptions
 from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
 from zora.rom.game_config import GameConfig, HintMode
-from zora_measure.checkpoints.registry import CHECKPOINTS, measure_rom
-from zora_measure.checkpoints.comparison import Difference, Estimate, compare, estimate, summarize
 from zora.rom.parse.rom_file import load_rom, parse_rom
 from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.generate.rng import Rng
-from zora.generate.generation_pass import generate_shapes
-from zora.generate.shapes.options import ShapeOptions
+from zora_measure.checkpoints.comparison import Difference, Estimate, compare, estimate, summarize
+from zora_measure.checkpoints.registry import CHECKPOINTS, measure_rom
 
 # Generated hint text is written as generated seeds write it (the extended bank), not into the
 # vanilla bank, which ZORA's wording outgrows.
@@ -75,6 +75,7 @@ def test_refusal_count_check_reads_the_meaning() -> None:
     """FP-TRIF-01: the count eight crosses as the digit or the word; other
     numbers and words that merely contain it do not count."""
     from types import SimpleNamespace
+
     from zora_measure.checkpoints.features import b10_level9_refusal
 
     def states_eight(text: str) -> bool:

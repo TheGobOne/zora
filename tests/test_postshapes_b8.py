@@ -5,21 +5,32 @@ from pathlib import Path
 
 import pytest
 
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora.rom.game_config import GameConfig, HintMode
-from zora_measure.checkpoints.overworld_monsters_and_hp import (
-    boss_hp_walk, enemy_hp_walk, level9_records_match, owm_no_barred_placement, owm_non_candidates_kept,
-)
 from zora.flags.fields import HitPointChange
-from zora.model.enums import Enemy
-from zora.model.game_world import GameWorld
-from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.generate.rng import Rng, ScriptedRng
 from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng, ScriptedRng
 from zora.generate.shapes.options import ShapeOptions
 from zora.generate.steps.change_enemy_hp import (
-    BOSS_HP_TYPES, BOSS_MIRRORS, ENEMY_HP_TYPES, HP_UP_BIT, EnemyHpResult, _step, visiting_order, change_boss_hp,
+    BOSS_HP_TYPES,
+    BOSS_MIRRORS,
+    ENEMY_HP_TYPES,
+    HP_UP_BIT,
+    EnemyHpResult,
+    _step,
+    change_boss_hp,
+    visiting_order,
+)
+from zora.model.enums import Enemy
+from zora.model.game_world import GameWorld
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.rom.game_config import GameConfig, HintMode
+from zora.rom.parse.rom_file import load_rom, parse_rom
+from zora.rom.serialize.rom_file import serialize_to_rom
+from zora_measure.checkpoints.overworld_monsters_and_hp import (
+    boss_hp_walk,
+    enemy_hp_walk,
+    level9_records_match,
+    owm_no_barred_placement,
+    owm_non_candidates_kept,
 )
 
 # Generated hint text is written as generated seeds write it (the extended bank), not into the

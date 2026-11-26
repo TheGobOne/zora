@@ -1,21 +1,21 @@
 """Tests for staircase placement (SH-STAIR-01..10)."""
 from collections.abc import Callable
 
-from zora.model import room_grid
+from zora.generate.errors import GenerationFailure
 from zora.generate.rng import Rng
-from zora.model.room_grid import neighbor
 from zora.generate.shapes.doors import place_doors
 from zora.generate.shapes.entrances import place_entrances
-from zora.generate.errors import GenerationFailure
 from zora.generate.shapes.gridgen import grow_set
 from zora.generate.shapes.numbering import number_with_frees, spatial_pieces
-from zora.model.levels import L9_ENTRY_PERSON
+from zora.generate.shapes.options import ShapeOptions
+from zora.generate.shapes.stairs import place_stairs
+from zora.generate.shapes.tables import CELLAR_ITEMS, T2_LAYOUTS
+from zora.generate.shapes.world import FREED, CellPlan, SetWorld, StairKind, StairPlan
+from zora.model import room_grid
 from zora.model.enums import Enemy, RoomType, Side
 from zora.model.game_world import GameWorld
-from zora.generate.shapes.options import ShapeOptions
-from zora.generate.shapes.stairs import _blob_freed, place_stairs
-from zora.generate.shapes.world import FREED, GRID_ROWS, CellPlan, SetWorld, StairKind, StairPlan
-from zora.generate.shapes.tables import CELLAR_ITEMS, STAIR_BUDGET, T2_LAYOUTS
+from zora.model.levels import L9_ENTRY_PERSON
+from zora.model.room_grid import neighbor
 
 WALL = 1
 
@@ -141,6 +141,7 @@ def test_determinism() -> None:
 def _vanilla_gw() -> "GameWorld":
     import os
     from pathlib import Path as P
+
     from zora.rom.parse.rom_file import load_rom, parse_rom
     env = os.environ.get("ZORA_VANILLA_ROM")
     from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
@@ -154,7 +155,7 @@ def _vanilla_gw() -> "GameWorld":
 
 def test_special_rooms_via_flow() -> None:
     from zora.generate.generation_pass import generate_shapes
-    from zora.generate.shapes.tables import CELLAR_ITEMS, PERSON_ROOMS
+    from zora.generate.shapes.tables import PERSON_ROOMS
     for seed in range(6):
         res = generate_shapes(_vanilla_gw(), Rng(seed), ShapeOptions(), post_shapes=False)
         assert res.attempts >= 1
@@ -329,7 +330,7 @@ def _repair_level(world: SetWorld, blob: int, rng: Rng) -> int:
                         out.append(other)
         return out
 
-    def traversable(u: int, v: int) -> bool:  # noqa: B023
+    def traversable(u: int, v: int) -> bool:
         # v in frontier(u) already; u's side toward v must be non-solid AND
         # v's side toward u non-solid for normal room pairs; stair links are
         # always traversable (they are staircase tiles).

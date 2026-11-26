@@ -6,23 +6,26 @@ from pathlib import Path
 import pytest
 
 from tests.needs import needs_base_rom
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora.rom.game_config import GameConfig, HintMode
-from zora_measure.checkpoints.acceptance import long_items_outside_level9
-from zora_measure.corpora import CLEAN, corpus
-from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.generate.rng import Rng
 from zora.generate.dungeon_walk import (
-    FAMILY_ITEMS, PRG0_POLS_VOICE_GROUP_VALUES, arrival_accepts, is_family_blocked, pols_voice_group_values,
+    FAMILY_ITEMS,
+    PRG0_POLS_VOICE_GROUP_VALUES,
     are_stairs_usable,
+    arrival_accepts,
+    is_family_blocked,
+    pols_voice_group_values,
 )
 from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng
 from zora.generate.shapes.options import ShapeOptions
-from zora.model.rooms import MONSTER_BIT_CODE, LayoutInfo, Room
-from zora.model.levels import ZELDA_LIST
 from zora.model.enums import Enemy, Item, RoomAction, RoomType, Side
-
+from zora.model.levels import ZELDA_LIST
+from zora.model.rooms import MONSTER_BIT_CODE, LayoutInfo, Room
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.rom.game_config import GameConfig, HintMode
+from zora.rom.parse.rom_file import load_rom, parse_rom
+from zora.rom.serialize.rom_file import serialize_to_rom
+from zora_measure.checkpoints.acceptance import long_items_outside_level9
+from zora_measure.corpora import CLEAN, corpus
 
 # Generated hint text is written as generated seeds write it (the extended bank), not into the
 # vanilla bank, which ZORA's wording outgrows.
@@ -154,7 +157,12 @@ from functools import cache  # noqa: E402
 
 from zora.generate import acceptance_check as acceptance  # noqa: E402
 from zora.generate.acceptance_check import (  # noqa: E402
-    DEFAULT_RULES, ONE_ARROW, ONE_CANDLE, TWO_ARROWS, AcceptanceCheck, logic_rules,
+    DEFAULT_RULES,
+    ONE_ARROW,
+    ONE_CANDLE,
+    TWO_ARROWS,
+    AcceptanceCheck,
+    logic_rules,
 )
 from zora.generate.steps.cave_entries import BURNABLE_SCREENS  # noqa: E402
 

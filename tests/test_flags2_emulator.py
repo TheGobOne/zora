@@ -34,8 +34,10 @@ from tests.emulator import (
     Emulator,
     Mode,
 )
+from tests.test_feature_patches import vanilla
 from tests.test_progressive_emulator import (
     BLUE_POTION,
+    COAST_SCREEN,
     ENTER_ROOM_MODE,
     INV_BOOMERANG,
     INV_LETTER,
@@ -45,13 +47,11 @@ from tests.test_progressive_emulator import (
     LETTER_DELIVERED,
     POTION,
     RED_POTION,
-    COAST_SCREEN,
     Game,
     cave_type,
     finished,
 )
 from tests.test_progressive_emulator import build as progressive_build
-from tests.test_feature_patches import vanilla
 from zora.flags.codec import decode, encode
 from zora.flags.fields import ThreeState
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF

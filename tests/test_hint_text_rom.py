@@ -5,20 +5,28 @@ from pathlib import Path
 
 import pytest
 
+from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng
+from zora.generate.shapes.options import ShapeOptions
+from zora.generate.steps.hint_text import POOL
 from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
 from zora.rom.game_config import GameConfig, HintMode
-from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.generate.rng import Rng
 from zora.rom.layout import (
-    EXT_BANK1_ROM_START, EXT_HINT_CPU_BASE, EXT_HINT_DATA_ROM_END, EXT_HINT_DATA_ROM_START,
-    HINT_SHOP_QUOTES_ADDRESS, HINT_TEXT_SPILL_FILL, OVERWORLD_PERSON_TEXT_SELECTORS_ADDRESS, QUOTE_DATA_ADDRESS, TOLL_TEXT_POINTER,
-    UNDERWORLD_PERSON_TEXT_SELECTORS_A_ADDRESS, UNDERWORLD_PERSON_TEXT_SELECTORS_B_ADDRESS,
+    EXT_BANK1_ROM_START,
+    EXT_HINT_CPU_BASE,
+    EXT_HINT_DATA_ROM_END,
+    EXT_HINT_DATA_ROM_START,
+    HINT_SHOP_QUOTES_ADDRESS,
+    HINT_TEXT_SPILL_FILL,
+    OVERWORLD_PERSON_TEXT_SELECTORS_ADDRESS,
+    QUOTE_DATA_ADDRESS,
+    TOLL_TEXT_POINTER,
+    UNDERWORLD_PERSON_TEXT_SELECTORS_A_ADDRESS,
+    UNDERWORLD_PERSON_TEXT_SELECTORS_B_ADDRESS,
     UNDERWORLD_PERSON_TEXT_SELECTORS_SIZE,
 )
-from zora.generate.generation_pass import generate_shapes
-from zora.generate.steps.hint_text import POOL
-from zora.generate.shapes.options import ShapeOptions
+from zora.rom.parse.rom_file import load_rom, parse_rom
+from zora.rom.serialize.rom_file import serialize_to_rom
 
 SLOT_COUNT = 45
 OVERLAY_WORKERS = 4                 # test_overlay_rate_about_half's processes, beside xdist's
@@ -151,7 +159,7 @@ def _overlay_flags(seed: int) -> tuple[bool, ...]:
 @pytest.mark.slow                    # 100 generations; the per-seed checks above run by default
 def test_overlay_rate_about_half() -> None:
     """HT-HINT-02: over many seeds each helpful slot wins the overlay ~1/2."""
-    wins: dict[int, int] = {slot: 0 for slot in HELPFUL_SLOTS}
+    wins: dict[int, int] = dict.fromkeys(HELPFUL_SLOTS, 0)
     n = 100
     _vanilla_rom()                      # skips here, not in a worker, when the ROM is missing
     # The 100 generations are independent: a few processes keep this one test from setting the

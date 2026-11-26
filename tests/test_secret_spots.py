@@ -7,8 +7,16 @@ import pytest
 from tests.needs import needs_base_rom
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF
 from zora.generate.pipeline import generate_rom
-from zora.generate.steps.change_secret_spots import (BOMBABLE_ROCK_WALL, BURNABLE_TREE, EXIT_ROWS, PLAIN_TWINS,
-                                                     first_secret, move_the_stairs_exit, stairs_exit, survey)
+from zora.generate.steps.change_secret_spots import (
+    BOMBABLE_ROCK_WALL,
+    BURNABLE_TREE,
+    EXIT_ROWS,
+    PLAIN_TWINS,
+    first_secret,
+    move_the_stairs_exit,
+    stairs_exit,
+    survey,
+)
 from zora.rom.base_rom import remember_repo_base_rom
 from zora.rom.parse.rom_file import parse_rom
 from zora.rom.vanilla_overworld.layouts import read_overworld_layouts

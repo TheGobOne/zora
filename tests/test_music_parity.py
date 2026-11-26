@@ -189,8 +189,8 @@ def first_overrun(*runs: list[tuple[bytes, int]]) -> int:
     """The first game frame whose work ran past its video frame in any of the runs (len when none
     did): the one before the first frame reached after a lag frame. The state is read at the end of
     each video frame, so an overrunning frame's is read part-way through its work."""
-    return min((next((max(index - 1, 0) for index, (_state, lag) in enumerate(run) if lag), len(run))
-                for run in runs))
+    return min(next((max(index - 1, 0) for index, (_state, lag) in enumerate(run) if lag), len(run))
+                for run in runs)
 
 
 @needs_base_rom

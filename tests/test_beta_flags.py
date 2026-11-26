@@ -13,8 +13,7 @@ from typing import Any
 import pytest
 
 from tests.test_web_conflict_tabs import page_function
-from zora.flags import beta
-from zora.flags import codec
+from zora.flags import beta, codec
 from zora.flags import form as flag_form
 from zora.flags.fields import ItemShuffleScope
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF

@@ -8,7 +8,7 @@ from collections import Counter
 import pytest
 
 from zora import archipelago
-from zora.archipelago import OptionsConflict, flag_strings
+from zora.archipelago import flag_strings
 from zora.flags import form as flag_form
 from zora.flags.codec import decode, encode
 from zora.flags.dependencies import apply_dependencies

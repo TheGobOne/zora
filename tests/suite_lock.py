@@ -49,7 +49,6 @@ if sys.platform == "win32":
     def _unlock(lock: IO[str]) -> None:
         _lock_byte(lock, msvcrt.LK_UNLCK)
 else:
-    import fcntl
 
     def _try_lock(lock: IO[str]) -> None:
         """Take the lock now or raise BlockingIOError."""

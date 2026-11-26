@@ -10,23 +10,34 @@ from types import ModuleType
 import pytest
 
 from tests.test_feature_patches import vanilla
+from zora.flags import zora_flags
+from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng
+from zora.generate.shapes.options import ShapeOptions
+from zora.model.enums import Item
+from zora.model.overworld import Shop
 from zora.rom.base_rom import Original, original_bytes, piece_bytes, piece_length
 from zora.rom.code_patch_data import PATCHES
 from zora.rom.code_patches import (
-    BLANK_HINTS, BOOK_TO_UNDERSTAND_NPCS, ENTR_01, ENTR_01_SIDES, EXIT_ROOM_COUNT_FLAG, LEVEL_INFO_EXIT_ROOM_COUNT, ONE_TIME_WARES, PROGRESSIVE_CAVES,
+    BLANK_HINTS,
+    BOOK_TO_UNDERSTAND_NPCS,
+    ENTR_01,
+    ENTR_01_SIDES,
+    EXIT_ROOM_COUNT_FLAG,
+    LEVEL_INFO_EXIT_ROOM_COUNT,
+    ONE_TIME_WARES,
+    PROGRESSIVE_CAVES,
     PROGRESSIVE_ITEMS_BYTE,
-    PROGRESSIVE_ROOM_ITEMS, SHOPS_BY_NUMBER, START_ITEMS, left_out_patches, one_time_wares,
+    PROGRESSIVE_ROOM_ITEMS,
+    SHOPS_BY_NUMBER,
+    START_ITEMS,
+    left_out_patches,
+    one_time_wares,
 )
-from zora.flags import zora_flags
-from zora.model.enums import Item
-from zora.model.overworld import Shop
 from zora.rom.game_config import GameConfig, HintMode
 from zora.rom.parse.rom_file import original_bins_from_rom, parse_rom
-from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.generate.rng import Rng
 from zora.rom.serialize.game_world import serialize_game_world
-from zora.generate.generation_pass import generate_shapes
-from zora.generate.shapes.options import ShapeOptions
+from zora.rom.serialize.rom_file import serialize_to_rom
 
 REPO = Path(__file__).resolve().parent.parent
 

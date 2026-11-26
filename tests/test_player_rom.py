@@ -80,7 +80,7 @@ print(json.dumps(given))
 def _received_in_this_process() -> list[list[list[int]]]:
     from zora import archipelago
     from zora.rom import inventory
-    ram = {address: 0 for address in range(inventory.ITEMS, inventory.MAX_BOMBS + 1)}
+    ram = dict.fromkeys(range(inventory.ITEMS, inventory.MAX_BOMBS + 1), 0)
     ram[inventory.ITEMS + inventory.HEART_VALUES_SLOT] = 0x22
     given = []
     for name in RECEIVED:

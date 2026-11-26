@@ -40,11 +40,14 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
 from zora.flags import form as flag_form  # noqa: E402
-from zora.flags.fields import ENCODE_LEVEL_DATA, OPTION_FIELDS, TOGGLE_FIELDS
-from zora.flags.support import mvp_baseline_settings, support
+from zora.flags.fields import (
+    ENCODE_LEVEL_DATA,
+    OPTION_FIELDS,
+    TOGGLE_FIELDS,
+    OptionField,
+)
+from zora.flags.support import Support, mvp_baseline_settings, support
 from zora.rom import level_encoding
-from zora.flags.fields import OptionField  # noqa: E402
-from zora.flags.support import Support
 
 CSV_PATH = REPO / "docs" / "flag-names.csv"
 REFERENCE_PATH = REPO / "docs" / "spec" / "flag-names-reference.csv"

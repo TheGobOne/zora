@@ -8,7 +8,16 @@ from functools import cache
 import pytest
 
 from tests.emulator import (
-    CUR_LEVEL, GAME_MODE, GAME_SUBMODE, ITEMS, OBJ_X, OBJ_Y, ROOM_ID, Button, Emulator, Mode,
+    CUR_LEVEL,
+    GAME_MODE,
+    GAME_SUBMODE,
+    ITEMS,
+    OBJ_X,
+    OBJ_Y,
+    ROOM_ID,
+    Button,
+    Emulator,
+    Mode,
 )
 from tests.test_feature_patches import vanilla
 from zora.generate.generation_pass import generate_shapes

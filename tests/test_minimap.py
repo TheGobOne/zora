@@ -1,7 +1,11 @@
 """SH-MAP-01 drawing commands: records plus one terminator, laid over the
 level's previous command block."""
 from zora.generate.shapes.minimap import (
-    COMMAND_BLOCK_SIZE, COMMANDS_END, command_block, drawn_commands, synthesize_minimap,
+    COMMAND_BLOCK_SIZE,
+    COMMANDS_END,
+    command_block,
+    drawn_commands,
+    synthesize_minimap,
 )
 
 

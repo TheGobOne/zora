@@ -26,17 +26,6 @@ from typing import Any
 
 import pytest
 
-from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
-from zora_measure.checkpoints.summaries import POOL_ITEMS
-from zora_measure.checks import Check, CheckResult, finished_rom_checks
-from zora.model.enums import Destination, Enemy, Item
-from zora.model.overworld import ItemCave, Shop
-from zora.model.game_world import GameWorld
-from zora.rom.game_config import BLOCKED_CONFIG, DungeonNothingCode, GameConfig, HintMode
-from zora.rom.parse.rom_file import load_rom, parse_rom
-from zora.rom.serialize.rom_file import serialize_to_rom
-from zora.generate.rng import Rng
-from zora.rom.layout import ines_header
 from zora.flags.fields import (
     CaveShuffle,
     DungeonLayoutSource,
@@ -50,8 +39,19 @@ from zora.generate.alternative_values import AlternativeValues
 from zora.generate.extra_options import ExtraOptions
 from zora.generate.flag_steps import FlagSteps
 from zora.generate.generation_pass import generate_shapes
+from zora.generate.rng import Rng
 from zora.generate.shapes.options import BLOCKED_OPTIONS, ShapeOptions
 from zora.generate.steps.level_9_entry import EIGHT_PIECES_ENTRY, Level9Entry
+from zora.model.enums import Destination, Enemy, Item
+from zora.model.game_world import GameWorld
+from zora.model.overworld import ItemCave, Shop
+from zora.rom.base_rom import BASE_ROM_PATH, verify_base_rom
+from zora.rom.game_config import BLOCKED_CONFIG, DungeonNothingCode, GameConfig, HintMode
+from zora.rom.layout import ines_header
+from zora.rom.parse.rom_file import load_rom, parse_rom
+from zora.rom.serialize.rom_file import serialize_to_rom
+from zora_measure.checkpoints.summaries import POOL_ITEMS
+from zora_measure.checks import Check, CheckResult, finished_rom_checks
 from zora_measure.statistics import special_cave_items
 
 SEEDS = (101, 202, 303)
