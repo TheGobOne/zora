@@ -193,7 +193,7 @@ def test_the_preview_assembles_them_as_python_does() -> None:
                 page_function("headerShift"), page_function("artSetTiles"),
                 f"const rom = Uint8Array.from({json.dumps(list(rom))});",
                 f"console.log(JSON.stringify(Array.from(artSetTiles({json.dumps(art_set_object(art))}, rom))));"])
-            drawn = json.loads(subprocess.run([node, "-e", script], capture_output=True, text=True,
+            drawn = json.loads(subprocess.run([node], input=script, capture_output=True, text=True,
                                               check=True).stdout)
             assert bytes(drawn) == art_tiles(art, reader(base))
     assert "artSetTiles(builtIn, baseRom)" in PAGE_SCRIPT

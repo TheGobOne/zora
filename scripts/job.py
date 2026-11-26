@@ -42,7 +42,8 @@ sys.path.insert(0, str(REPO))
 from zora_measure import progress  # noqa: E402
 
 USAGE = __doc__
-FORWARDED_SIGNALS = (signal.SIGTERM, signal.SIGHUP, signal.SIGINT)
+FORWARDED_SIGNALS = tuple(getattr(signal, name) for name in ("SIGTERM", "SIGHUP", "SIGINT")
+                          if hasattr(signal, name))      # no SIGHUP on Windows
 STOP_GRACE_SECONDS = 10          # then the group is killed (SIGKILL)
 SIGNAL_EXIT_BASE = 128
 STOPPED, NOTHING_TO_STOP, NO_SUCH_JOB, REFUSED = 0, 1, 2, 3

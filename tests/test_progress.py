@@ -16,6 +16,8 @@ import pytest
 
 from zora_measure import progress
 
+POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="needs POSIX signals, process groups and ps")
+
 REPO = Path(__file__).resolve().parent.parent
 INTERVAL = "0.2"
 
@@ -101,6 +103,7 @@ def test_jobs_lists_a_job_inside_another_and_flags_the_hung(folder: Path) -> Non
     assert second.startswith("    - S, pid") and "50% (30/60 tests)" in second and "PROBABLY HUNG" in second
 
 
+@POSIX_ONLY
 def test_job_run_keeps_its_commands_status_and_last_line(folder: Path) -> None:
     command = [sys.executable, str(REPO / "scripts" / "job.py"), "run", "--name", "probe", "--",
                sys.executable, "-c", "import time; time.sleep(0.5); print('the verdict'); raise SystemExit(3)"]
@@ -266,6 +269,7 @@ def _start_job(folder: Path, body: str, session: str | None = None) -> subproces
     return process
 
 
+@POSIX_ONLY
 def test_a_job_stopped_by_sigterm_marks_its_status_file(folder: Path) -> None:
     process = _start_job(folder, "progress.note_step('a step')\nprint('stepped', flush=True)\ntime.sleep(30)")
     assert process.stdout is not None and process.stdout.readline().strip() == "stepped"
@@ -310,6 +314,7 @@ def test_jobs_marks_a_job_whose_process_is_gone_died_and_then_lets_it_go(folder:
     assert "verify.sh (fast tier)" in everything and "DIED" in everything
 
 
+@POSIX_ONLY
 def test_job_run_passes_sigterm_to_its_command_and_marks_the_job(folder: Path, tmp_path: Path) -> None:
     """SIGTERM to `job.py run` reaches the command's whole process group (here a shell and the
     sleep it started), leaves nothing running, and marks the job stopped."""
@@ -363,6 +368,7 @@ def test_a_job_records_its_sessions_full_id(folder: Path, monkeypatch: pytest.Mo
     assert not progress.is_mine(status) and not progress.is_mine({**status, "session_id": None})
 
 
+@POSIX_ONLY
 def test_job_stop_stops_the_calling_sessions_own_job(folder: Path) -> None:
     process = _start_job(folder, "time.sleep(30)", session=MY_SESSION)
     [status] = progress.read_jobs()
@@ -390,6 +396,7 @@ def test_job_stop_refuses_any_job_but_the_callers_own(folder: Path, owner: str |
         process.wait()
 
 
+@POSIX_ONLY
 def test_job_stop_refuses_a_pid_a_later_process_was_given(folder: Path) -> None:
     """The job's process is gone and its pid now names another process: never signal that one."""
     later = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])

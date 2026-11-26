@@ -124,7 +124,7 @@ for (const [name, text] of Object.entries({json.dumps(cases)})) {{
 out.good = checkedLinkSpriteSet(JSON.parse({json.dumps(sprite_set_file(TEST_SET))}), rule);
 out.kraid = checkedLinkSpriteSet(JSON.parse({json.dumps(sprite_set_file(KRAID))}), rule);
 console.log(JSON.stringify(out));"""
-    found = json.loads(subprocess.run([node, "-e", script], capture_output=True, text=True, check=True).stdout)
+    found = json.loads(subprocess.run([node], input=script, capture_output=True, text=True, check=True).stdout)
     for case, text in cases.items():
         with pytest.raises(SpriteSetError) as refused:
             sprite_set_from_file(text)

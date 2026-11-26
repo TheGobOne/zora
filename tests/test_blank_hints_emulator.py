@@ -13,7 +13,7 @@ from functools import cache
 import pytest
 
 from tests.emulator import OBJ_STATE
-from tests.needs import needs_base_rom
+from tests.needs import needs_base_rom, needs_prg1
 from tests.test_assignment_emulator import Console
 from tests.test_revision import prg1
 from zora.generate.pipeline import build, finish, plan
@@ -70,7 +70,7 @@ def test_only_blank_hints_write_the_patch() -> None:
         assert rom(DECEPTION)[offset:offset + len(piece)] == base[offset:offset + len(piece)]
 
 
-@pytest.mark.parametrize("on_prg1", [False, True])
+@pytest.mark.parametrize("on_prg1", [False, pytest.param(True, marks=needs_prg1)])
 @pytest.mark.parametrize(("level", "room"), EMPTY_TEXT_ROOMS)
 def test_an_empty_text_draws_no_tile(level: int, room: int, on_prg1: bool) -> None:
     before, after, state = visit(rom(BLANK, on_prg1), level, room)
@@ -88,7 +88,7 @@ def text_rows(data: bytes, level: int, room: int) -> tuple[bytes, int]:
     return console.emu.nametable(TEXT_ROWS, TEXT_ROWS_SIZE), console.emu[OBJ_STATE + PERSON_SLOT]
 
 
-@pytest.mark.parametrize("on_prg1", [False, True])
+@pytest.mark.parametrize("on_prg1", [False, pytest.param(True, marks=needs_prg1)])
 @pytest.mark.parametrize(("level", "room"), REAL_TEXT_ROOMS)
 def test_a_real_text_draws_as_before(level: int, room: int, on_prg1: bool) -> None:
     rows, state = text_rows(rom(BLANK, on_prg1), level, room)

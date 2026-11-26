@@ -135,6 +135,8 @@ class _Booted:
     last_frame: np.ndarray
 
 
+POWER_ON_UNSET_STATE_BYTE = 24     # offset in cynes.NES.save(); see Emulator.__init__
+
 # new_game's result per ROM (SHA-1), in this process (tasks/test-speed-2.md): booting takes
 # about 300 frames, and many tests boot the same ROM. A reloaded state plays on exactly as the
 # console it was saved from (RAM, save RAM, the whole state and the screen, checked through
@@ -148,6 +150,11 @@ class Emulator:
     def __init__(self, rom: bytes | Path) -> None:
         path = _rom_file(rom)
         self.nes = cynes.NES(str(path))
+        # cynes 0.1.2 leaves one byte of its state uninitialized at power-on: zero heap on Linux,
+        # leftover memory on Windows, where it changed the boot's frame timing from run to run
+        state = self.nes.save()
+        state[POWER_ON_UNSET_STATE_BYTE] = 0
+        self.nes.load(state)
         self.rom_hash = hashlib.sha1(path.read_bytes()).hexdigest()
         self.frames = 0
         self.last_frame = np.zeros((SCREEN_HEIGHT, SCREEN_WIDTH, 3), dtype=np.uint8)

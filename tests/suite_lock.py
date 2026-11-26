@@ -20,7 +20,6 @@ the lock and takes it only when it is the earliest live waiter. While waiting, a
 minute who holds the lock (session, command, process, since when) and its own place in the queue,
 and tells the job it runs in (zora_measure/progress.py) what it is waiting for.
 """
-import fcntl
 import json
 import os
 import subprocess
@@ -30,6 +29,34 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import IO, Any, TypedDict
+
+if sys.platform == "win32":
+    import msvcrt
+
+    LOCK_BYTE = 1 << 30     # Windows byte locks are mandatory: lock one far past the holder's label
+
+    def _lock_byte(lock: IO[str], mode: int) -> None:
+        os.lseek(lock.fileno(), LOCK_BYTE, os.SEEK_SET)     # callers seek the file again before reading it
+        msvcrt.locking(lock.fileno(), mode, 1)
+
+    def _try_lock(lock: IO[str]) -> None:
+        """Take the lock now or raise BlockingIOError."""
+        try:
+            _lock_byte(lock, msvcrt.LK_NBLCK)
+        except OSError:
+            raise BlockingIOError from None
+
+    def _unlock(lock: IO[str]) -> None:
+        _lock_byte(lock, msvcrt.LK_UNLCK)
+else:
+    import fcntl
+
+    def _try_lock(lock: IO[str]) -> None:
+        """Take the lock now or raise BlockingIOError."""
+        _try_lock(lock)
+
+    def _unlock(lock: IO[str]) -> None:
+        _unlock(lock)
 
 REPO = Path(__file__).resolve().parent.parent
 LOCK_SETTING = "ZORA_SUITE_LOCK"
@@ -116,12 +143,14 @@ def _note_started() -> None:
 
 
 def _alive(pid: int) -> bool:
+    if progress := _progress():
+        return bool(progress.alive(pid))
     try:
         os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
     except PermissionError:
         return True
+    except OSError:         # ProcessLookupError; on Windows a gone pid is WinError 87
+        return False
     return True
 
 
@@ -164,11 +193,11 @@ def holder() -> str | None:
         return None
     with LOCK_PATH.open("a+") as lock:
         try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            _try_lock(lock)
         except BlockingIOError:
             lock.seek(0)
             return lock.read().strip() or "another run"
-        fcntl.flock(lock, fcntl.LOCK_UN)
+        _unlock(lock)
     return None
 
 
@@ -190,7 +219,7 @@ def suite_lock(label: str, say: Callable[[str], None] = _say) -> Iterator[None]:
             yield
         finally:
             os.environ.pop(HELD_ENV, None)
-            fcntl.flock(lock, fcntl.LOCK_UN)
+            _unlock(lock)
 
 
 def _take(lock: IO[str], label: str, say: Callable[[str], None]) -> None:
@@ -209,7 +238,7 @@ def _take(lock: IO[str], label: str, say: Callable[[str], None]) -> None:
             first = not waiters or waiters[0]["pid"] == os.getpid()
             if first:
                 try:
-                    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    _try_lock(lock)
                     break
                 except BlockingIOError:
                     pass

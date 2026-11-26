@@ -65,7 +65,8 @@ HISTORY_RUNS = 5                                 # earlier durations kept per jo
 FINISHED, FAILED, RUNNING, WAITING = "finished", "failed", "running", "waiting"
 STOPPED, DIED = "stopped", "died"                 # ended by a signal; gone without a word (jobs.py says so)
 ENDED = (FINISHED, FAILED, STOPPED, DIED)
-STOP_SIGNALS = (signal.SIGTERM, signal.SIGHUP)    # SIGINT is KeyboardInterrupt: finish() runs as it unwinds
+# SIGINT is KeyboardInterrupt: finish() runs as it unwinds; Windows has no SIGHUP
+STOP_SIGNALS = tuple(getattr(signal, name) for name in ("SIGTERM", "SIGHUP") if hasattr(signal, name))
 
 T = TypeVar("T")
 
@@ -548,13 +549,32 @@ def innermost_child(job_id: str) -> dict[str, Any] | None:
 
 
 def alive(pid: int) -> bool:
+    if sys.platform == "win32":
+        return _windows_alive(pid)
     try:
         os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
     except PermissionError:
         return True
+    except OSError:         # ProcessLookupError; on Windows a gone pid is WinError 87
+        return False
     return True
+
+
+def _windows_alive(pid: int) -> bool:
+    """Whether PID is still running. os.kill(pid, 0) counts an exited process as running while a
+    handle to it is open (its parent's Popen), so ask for its exit code instead."""
+    import ctypes
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.OpenProcess.restype = ctypes.c_void_p
+    handle = kernel32.OpenProcess(0x1000, False, pid)       # PROCESS_QUERY_LIMITED_INFORMATION
+    if not handle:
+        return ctypes.get_last_error() == 5                 # access denied: it exists
+    try:
+        code = ctypes.c_ulong()
+        ok = kernel32.GetExitCodeProcess(ctypes.c_void_p(handle), ctypes.byref(code))
+        return bool(ok) and code.value == 259                # STILL_ACTIVE
+    finally:
+        kernel32.CloseHandle(ctypes.c_void_p(handle))
 
 
 def health(status: dict[str, Any], now: float | None = None) -> str:

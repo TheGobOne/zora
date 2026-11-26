@@ -13,7 +13,7 @@ from types import ModuleType
 
 import pytest
 
-from tests.needs import needs_base_rom
+from tests.needs import needs_base_rom, needs_prg1
 from zora.rom import base_rom
 from zora.rom.base_rom import Original
 from zora.rom.music.lozft_patch_data import PATCHES
@@ -22,6 +22,7 @@ from zora.rom.revision import GRAPHICS_BLOCKS, NES_HEADER_SIZE, Revision
 REPO = Path(__file__).resolve().parent.parent
 BATTERY_BYTE = 6                 # the iNES header's flags 6: mapper 4 ($40), with the battery bit $42
 MMC3_WITH_BATTERY = 0x42
+REVISIONS = [Revision.PRG0, pytest.param(Revision.PRG1, marks=needs_prg1)]
 PRG_BANKS_BYTE, LOZFT_BANKS = 4, 16
 
 
@@ -60,6 +61,7 @@ def test_copies_never_read_tiles() -> None:
 
 
 @needs_base_rom
+@needs_prg1
 def test_no_original_game_bytes_in_the_literals() -> None:
     script = build_script()
     releases = [script.release(Revision.PRG0), script.release(Revision.PRG1)]
@@ -68,7 +70,7 @@ def test_no_original_game_bytes_in_the_literals() -> None:
 
 
 @needs_base_rom
-@pytest.mark.parametrize("revision", [Revision.PRG0, Revision.PRG1])
+@pytest.mark.parametrize("revision", REVISIONS)
 def test_scrambled_tiles_give_the_same_bytes(revision: Revision) -> None:
     script = build_script()
     game = script.release(revision)
@@ -105,6 +107,7 @@ def test_the_pin_is_quantams_build_by_default() -> None:
 
 @needs_build
 @needs_base_rom
+@needs_prg1
 def test_the_data_is_the_build() -> None:
     """zora/rom/music/lozft_patch_data.py is what the pinned source builds today."""
     script = build_script()
@@ -120,7 +123,7 @@ OVERWORLD_FRAMES = 600
 
 
 @needs_base_rom
-@pytest.mark.parametrize("revision", [Revision.PRG0, Revision.PRG1])
+@pytest.mark.parametrize("revision", REVISIONS)
 def test_a_music_rom_from_source_plays(revision: Revision) -> None:
     """A seed with Music: Random through lozft built from source (randomize_music):
     the 256 KB MMC3 ROM with the battery bit, the statistics screen called once a frame, every cave
@@ -222,7 +225,7 @@ def test_book_is_an_atlas_and_the_bomb_upgrade_on_a_music_rom_from_source(state:
 
 
 @needs_base_rom
-@pytest.mark.parametrize("revision", [Revision.PRG0, Revision.PRG1])
+@pytest.mark.parametrize("revision", REVISIONS)
 @pytest.mark.parametrize("choice", ["CONTROLLER2_UP_A", "CONTROLLER1_UP_A", "CONTROLLER1_UP_SELECT"])
 def test_the_death_warp_works_on_a_music_rom(revision: Revision, choice: str) -> None:
     """The controller-2 check (docs/music.md): lozft reads controller 2 only with the item screen open. The game's
@@ -291,7 +294,7 @@ def _stats_inputs(frames: int) -> list[int]:
 
 
 @needs_base_rom
-@pytest.mark.parametrize("revision", [Revision.PRG0, Revision.PRG1])
+@pytest.mark.parametrize("revision", REVISIONS)
 def test_the_statistics_count_on_lozft2_as_on_mmc1(revision: Revision) -> None:
     """The statistics screen counts frames on a lozft2 ROM (its "lozft2" choice: StatsTick at the end
     of DriveAudio, which lozft calls once a frame) as on today's ROM (StatsTick at IsrNmi's JSR

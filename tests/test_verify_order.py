@@ -18,6 +18,7 @@ import os
 import shutil
 import signal
 import subprocess
+import sys
 import time
 from collections.abc import Iterator
 from pathlib import Path
@@ -48,6 +49,7 @@ pytestmark = [
                        or shutil.which("git") is None, reason="no verify scripts, base ROM or git here"),
     pytest.mark.skipif(bool(os.environ.get(NESTED_SETTING)), reason="inside a verify these tests started"),
 ]
+POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="scripts/verify.sh needs a POSIX shell with python3")
 
 
 def _environment(lock: Path) -> dict[str, str]:
@@ -111,6 +113,7 @@ def _verify(checkout: Path, lock: Path, *arguments: str) -> tuple[int, str, floa
     return run.returncode, output, time.monotonic() - start
 
 
+@POSIX_ONLY
 def test_a_type_error_fails_before_the_lock(checkout: Path, held_lock: Path) -> None:
     planted = checkout / "zora" / "planted_type_error.py"
     planted.write_text(PLANTED_TYPE_ERROR)
@@ -124,6 +127,7 @@ def test_a_type_error_fails_before_the_lock(checkout: Path, held_lock: Path) -> 
     assert seconds < TIME_LIMIT_SECONDS
 
 
+@POSIX_ONLY
 def test_the_quick_check_runs_the_selection_and_the_comparison_without_the_lock(checkout: Path,
                                                                               held_lock: Path) -> None:
     """Beside a held lock it never waits: the selected tests at 2 workers, then the output, at 2."""
@@ -144,6 +148,7 @@ def test_the_quick_check_runs_the_selection_and_the_comparison_without_the_lock(
     assert "matrix, this checkout" not in output
 
 
+@POSIX_ONLY
 def test_with_the_lock_free_the_tests_run_beside_the_output(checkout: Path, tmp_path: Path) -> None:
     """Owner ruling, 2026-11-07 (options C and E): nobody holds the lock, so 8 hashing workers and the
     selected tests beside them; their output follows the comparison's, and a failure still fails it."""
@@ -165,6 +170,7 @@ def test_with_the_lock_free_the_tests_run_beside_the_output(checkout: Path, tmp_
     assert failed_status == 1 and "verify: FAILED in the tests above" in failed_output, failed_output
 
 
+@POSIX_ONLY
 def test_a_change_to_generation_is_compared(checkout: Path, held_lock: Path) -> None:
     """A change under zora/ is an output input: the quick check hashes seeds 1-2 of each matrix case
     (shortened here) and ends on "identical" for a module nothing imports."""
@@ -180,6 +186,7 @@ def test_a_change_to_generation_is_compared(checkout: Path, held_lock: Path) -> 
     assert "compare_revision: output identical to" in output.splitlines()[-1]
 
 
+@POSIX_ONLY
 def test_the_tests_stop_at_the_first_failure(checkout: Path, held_lock: Path) -> None:
     """A failing selected test ends the quick check before the comparison."""
     planted = checkout / "tests" / "test_planted_failures.py"

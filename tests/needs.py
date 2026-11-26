@@ -16,13 +16,14 @@ from pathlib import Path
 import pytest
 
 from zora.rom import level_encoding
-from zora.rom.base_rom import BASE_ROM_PATH
+from zora.rom.base_rom import BASE_ROM_PATH, PRG1_ROM_PATH
 
 NEEDS_BASE_ROM = "needs the base ROM"
 NEEDS_CORPORA = "needs the corpora"
 NEEDS_ENCODER = "needs the encoder"
 
 needs_base_rom = pytest.mark.skipif(not BASE_ROM_PATH.exists(), reason=NEEDS_BASE_ROM)
+needs_prg1 = pytest.mark.skipif(not PRG1_ROM_PATH.exists(), reason="needs the PRG1 (Rev 1) ROM beside the base")
 needs_encoder = pytest.mark.skipif(not level_encoding.is_available(), reason=NEEDS_ENCODER)
 
 
