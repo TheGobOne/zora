@@ -124,7 +124,7 @@ def test_heads_interface_is_read(script: ModuleType, tmp_path: Path) -> None:
     assert found["player settings"]["green_tunic"]["kind"] == "color"
     assert found["hidden options"] == ["detailed_spoiler_log", "disable_custom_music", "gatekeeper_bosses",
                                        "item_counter", "item_shuffle_no_vanilla", "shuffle_wood_sword",
-                                       "universal_drops_v2", "wizzrobes_shoot_wallmasters"]
+                                       "show_item_pickups", "universal_drops_v2", "wizzrobes_shoot_wallmasters"]
     assert found["recipe format"][0] == "zora-ap-recipe"
 
 

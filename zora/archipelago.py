@@ -198,6 +198,8 @@ ZORA_FORCED_OFF = {
     "wizzrobes_shoot_wallmasters": "Not offered in Archipelago yet: it is still in beta.",
     # Item Counter (ZORA version 22): beta, and its table is read from ZORA mode's world (pipeline.with_item_counter)
     "item_counter": "Not offered in Archipelago yet: it is still in beta.",
+    # Show Item Pickups (ZORA version 23): the client writes the same status bar row (its HUD item messages)
+    "show_item_pickups": "Not offered in Archipelago: its client writes the same status bar row.",
 }
 # Z1R flags a released world offered and Archipelago now keeps off, each with its reason, kept as hidden options
 # so a player's older YAML still loads: any value is accepted and ignored. Print Quest Info (B51; owner ruling 9,

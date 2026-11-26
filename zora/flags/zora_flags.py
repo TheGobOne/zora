@@ -173,12 +173,20 @@ ITEM_COUNTER_FIELD = "item_counter"
 ITEM_COUNTER_FIELDS = (
     ITEM_COUNTER_FIELD,                    # the HUD counts the area's major-item places taken out of its total
 )
+# Version 23: Show Item Pickups, On / Off / ? like version 3's, a "?" decided by the same coins after version 22's.
+# Written by its asm/flags2 patch (zora/rom/owner_patches.py) with the texts of zora/rom/item_line.py: the status
+# bar's blank top row shows "GOT <item>" for each item Link takes. Archipelago holds it back (its client writes
+# the same row).
+ITEM_LINE_FIELD = "show_item_pickups"
+ITEM_LINE_FIELDS = (
+    ITEM_LINE_FIELD,                       # the status bar's top row names each item Link takes
+)
 # Every On / Off / ? field, in payload order: the "?" coins are drawn in this order.
 THREE_STATE_FIELDS = (*OWNER_2_0_FIELDS, *ZORA_1_0_FIELDS, *PEGASUS_BOOTS_FIELDS,
                       *EXPANDED_DUNGEON_LOCATIONS_FIELDS, *HIGHLIGHT_NO_DROP_ROOMS_FIELDS,
                       *DO_NOT_SEGMENT_DUNGEONS_FIELDS, *FULL_HEALTH_FIELDS, *SWAP_SWORDS_AND_RINGS_FIELDS,
                       *COMPASS_CHIME_FIELDS, *UNIVERSAL_DROPS_V2_FIELDS, *WIZZROBE_HAND_FIELDS,
-                      *ITEM_COUNTER_FIELDS)
+                      *ITEM_COUNTER_FIELDS, *ITEM_LINE_FIELDS)
 
 
 
@@ -322,6 +330,9 @@ FIELDS: tuple[ZoraField, ...] = (
     # Version 22: Item Counter (ITEM_COUNTER_FIELDS), Off by default, so every older string keeps its meaning and
     # its spelling.
     *(ZoraField(name, THREE_STATE_SLOTS, version=22) for name in ITEM_COUNTER_FIELDS),
+    # Version 23: Show Item Pickups (ITEM_LINE_FIELDS), Off by default, so every older string keeps its meaning and
+    # its spelling.
+    *(ZoraField(name, THREE_STATE_SLOTS, version=23) for name in ITEM_LINE_FIELDS),
 )
 CURRENT_VERSION = max(field.version for field in FIELDS)
 VERSION_SEPARATOR = "."
@@ -407,6 +418,8 @@ class ZoraFlags:
     wizzrobes_shoot_wallmasters: ThreeState = ThreeState.OFF
     # Version 22: Item Counter, On / Off / ? (ITEM_COUNTER_FIELDS).
     item_counter: ThreeState = ThreeState.OFF
+    # Version 23: Show Item Pickups, On / Off / ? (ITEM_LINE_FIELDS).
+    show_item_pickups: ThreeState = ThreeState.OFF
 
     def __post_init__(self) -> None:
         cap = self.magical_sword_hearts_highest
@@ -1276,9 +1289,9 @@ def forced_z1r_values(flags: ZoraFlags) -> list[tuple[str, ThreeState, str]]:
 # refused (FlagsRefused), never ignored.
 PRODUCED_OWNER_FIELDS: frozenset[str] = frozenset((*OWNER_2_0_FIELDS, *PEGASUS_BOOTS_FIELDS, *FULL_HEALTH_FIELDS,
                                                    *COMPASS_CHIME_FIELDS, *WIZZROBE_HAND_FIELDS,
-                                                   *ITEM_COUNTER_FIELDS))
+                                                   *ITEM_COUNTER_FIELDS, *ITEM_LINE_FIELDS))
 PATCHED_OWNER_FIELDS = (*OWNER_2_0_FIELDS, *PEGASUS_BOOTS_FIELDS, *FULL_HEALTH_FIELDS, *COMPASS_CHIME_FIELDS,
-                        *WIZZROBE_HAND_FIELDS, *ITEM_COUNTER_FIELDS)
+                        *WIZZROBE_HAND_FIELDS, *ITEM_COUNTER_FIELDS, *ITEM_LINE_FIELDS)
 
 
 # Fields refused on or "?" until their generation is built (none now: Expanded Dungeon Locations'

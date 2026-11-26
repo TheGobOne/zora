@@ -18,6 +18,7 @@ from .zora_flags import (
     ENUM_FIELDS,
     HEARTS_CAP_CHOICES,
     ITEM_COUNTER_FIELD,
+    ITEM_LINE_FIELD,
     ITEM_SHUFFLE_NO_VANILLA_FIELD,
     SWORDLISH_HIGHEST_FIELD,
     SWORDLISH_LOWEST_FIELD,
@@ -178,6 +179,10 @@ FIELDS: tuple[dict[str, Any], ...] = (
           "found, a slash and the area's total: in a level, its rooms and item cellars, heart containers "
           "included whatever the item shuffle; on the overworld, the caves, the Armos and coast items and the "
           "shop wares in the item shuffle. Totals over 9 show in hexadecimal (A = 10). Idea by Ultralavos.")),
+        (ITEM_LINE_FIELD, "Show Item Pickups",
+         ("The HUD's empty top row shows GOT and the item's name for about 6 seconds each time you take an "
+          "item, rupees, bombs, keys, hearts, fairies and clocks aside. Not offered in Archipelago, whose client "
+          "writes that row itself.")),
     )),
 )
 FIELD_NAMES = tuple(field["name"] for field in FIELDS)

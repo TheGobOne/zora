@@ -23,6 +23,9 @@
     },
     "item_counter": {
       "beta": "all"
+    },
+    "show_item_pickups": {
+      "beta": "all"
     }
   }
 }

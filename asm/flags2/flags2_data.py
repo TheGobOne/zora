@@ -181,4 +181,17 @@ PATCHES: dict[str, tuple[tuple[int, Piece], ...]] = {
                                 "85048506a9008505c6043009202abef0f7e605d0f3a50660e8bd62be300f1865008502a50169008503"
                                 "a910d01b484a4a4a29031869778502a9068503682907a8a9018830030ad0faa000310260")),
     ),
+    "item-line": (
+        (0x0654B, bytes.fromhex("20a9bd")),
+        (0x06BFE, bytes.fromhex("85f0a412c005f00ba0808c0605")),
+        (0x1750A, bytes.fromhex("f2")),
+        (0x17DB9, bytes.fromhex("a90620acffad6d0660")),
+        (0x1A0AE, bytes.fromhex("20afb1")),
+        (0x1B160, bytes.fromhex("a6f0f03ca90085f0e024b034bd44b2f02f8501bd20b2850020ebb1a000b1008502a91c38e5024a1869"
+                                "03aac8b1009d0203e8c602d0f5a9b485f1a90185f2d010a5f1f00ea5154a9009c6f1d00520ebb16868"
+                                "a027a9bd48a9ad48a9054cacffa5f2f032a90085f2a200a9238d06208a1869c08d0620ad0720ad0720"
+                                "29f08500a9238d06208a1869c08d0620a5008d0720e8e008d0d4a2ff8e020360a9208d0203a9228d03"
+                                "03a91c8d0403a9ff8d2103a91f8d0103a21ba9249d0503ca10fa60")),
+        (0x1BDBE, bytes.fromhex("4c50b1")),
+    ),
 }

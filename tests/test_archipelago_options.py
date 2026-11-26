@@ -89,7 +89,7 @@ def test_only_supported_values_are_offered() -> None:
     assert archipelago.NOT_OFFERED == {ENCODE_LEVEL_DATA.id, "C06", "shuffle_wood_sword", "disable_custom_music",
                                        "item_shuffle_no_vanilla", "universal_drops_v2", "detailed_spoiler_log",
                                        "wizzrobes_shoot_wallmasters", "item_counter",
-                                       "B51"}
+                                       "show_item_pickups", "B51"}
 
 
 def test_shuffle_wood_sword_is_never_offered_and_always_off() -> None:

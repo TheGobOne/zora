@@ -85,6 +85,7 @@ PATCHES = (
     "compass-chime",            # Compass Chime (ZORA version 18)
     "wizzrobe-hand",            # Wizzrobes Shoot Wallmasters (ZORA version 21; idea: Ultralavos)
     "item-counter",             # Item Counter (ZORA version 22; idea: Ultralavos)
+    "item-line",                # Show Item Pickups (ZORA version 23)
 )
 
 # Community members who wrote a feature (the document's credits; docs/credits.md).
@@ -126,6 +127,11 @@ FREE_SPACE = {
     # The end of fp-prog-02's old room slot $BB00-$BBFF; the extra screen layouts follow at $BBC0
     "ZORA_F2_LOST_HILLS": FreeSpace(5, 0xBBA0, 0xBBBF),
     "ZORA_F2_HARDER_GANON": FreeSpace(4, 0xBB00, 0xBBFF),
+    # Show Item Pickups (owner, 2026-11-25): bank 6 $B150-$B21F for the code (its names table, a site, follows to
+    # $B3FF), and the hop at $BDA9 in bank 5 (after Compass Chime's code) and $BDAE in bank 6.
+    "ZORA_F2_ITEM_LINE": FreeSpace(6, 0xB150, 0xB21F),
+    "ZORA_F2_ITEM_LINE_HOP_B5": FreeSpace(5, 0xBDA9, 0xBDB1),
+    "ZORA_F2_ITEM_LINE_HOP_B6": FreeSpace(6, 0xBDAE, 0xBDB0),
 }
 
 

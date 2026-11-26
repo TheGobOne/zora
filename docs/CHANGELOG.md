@@ -3,6 +3,12 @@
 What changed in each release of ZORA. The same version, flags and seed always make the same game,
 apart from the Cosmetic settings.
 
+## Unreleased
+
+### New Features
+
+- **Show Item Pickups** (ZORA extras, Miscellaneous; beta: On, Off or Random; Off by default). Each time Link takes an item, the HUD's empty top row shows GOT and the item's name ("GOT RAFT") for about 6 seconds. Rupees, bombs, keys, hearts, fairies and clocks show nothing. The game writes the row itself, so it works in any emulator with no script. Works with Item Counter and Pegasus Boots ("GOT PEGASUS BOOTS"). Not offered in Archipelago, whose client writes the same row.
+
 ## 2.0.1 (2026-11-18)
 
 ZORA 2.0.1 brings two new beta flags from Ultralavos, a crop guide for streamers, clearer file names, a starter tracker file for races, flags that paste straight from a file name, six race presets with a presets file for race bots, and a few fixes, among them three for Archipelago's logo look. Flag strings from 2.0.0 mean the same settings. Every seed's code changes, because every ROM now has the crop guide (on by default).
