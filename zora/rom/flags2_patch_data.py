@@ -186,12 +186,13 @@ PATCHES: dict[str, tuple[tuple[int, Piece], ...]] = {
         (0x06BFE, bytes.fromhex("85f0a412c005f00ba0808c0605")),
         (0x1750A, bytes.fromhex("f2")),
         (0x17DB9, bytes.fromhex("a90620acffad6d0660")),
-        (0x1A0AE, bytes.fromhex("20afb1")),
-        (0x1B160, bytes.fromhex("a6f0f03ca90085f0e024b034bd44b2f02f8501bd20b2850020ebb1a000b1008502a91c38e5024a1869"
-                                "03aac8b1009d0203e8c602d0f5a9b485f1a90185f2d010a5f1f00ea5154a9009c6f1d00520ebb16868"
-                                "a027a9bd48a9ad48a9054cacffa5f2f032a90085f2a200a9238d06208a1869c08d0620ad0720ad0720"
-                                "29f08500a9238d06208a1869c08d0620a5008d0720e8e008d0d4a2ff8e020360a9208d0203a9228d03"
-                                "03a91c8d0403a9ff8d2103a91f8d0103a21ba9249d0503ca10fa60")),
+        (0x1A0AE, bytes.fromhex("20d1b1")),
+        (0x1B160, bytes.fromhex("24f23008a98085f2a9ff85f0a6f0e0fff050a9ff85f0e024b048bd64b2f0438501bd40b28500200eb2"
+                                "a000b1000aa9b490014a85f1b100297f8502a91838e5024a186903aaa0fcb936b19d0203e8c8d0f6c8"
+                                "b1009d0203e8c602d0f5a98185f2d010a5f1f00ea5154a9009c6f1d005200eb26868a027a9bd48a9ad"
+                                "48a9054cacffa5f24a9032a98085f2a200a9238d06208a1869c08d0620ad0720ad072029f08500a923"
+                                "8d06208a1869c08d0620a5008d0720e8e008d0d4a2ff8e020360a9208d0203a9228d0303a91c8d0403"
+                                "a9ff8d2103a91f8d0103a21ba9249d0503ca10fa6010181d24")),
         (0x1BDBE, bytes.fromhex("4c50b1")),
     ),
 }

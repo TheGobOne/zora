@@ -23,8 +23,9 @@ def read_texts(table: bytes) -> dict[int, str]:
         if not table[codes + code]:
             continue
         start = (table[code] | table[codes + code] << 8) - item_line.TABLE_CPU
-        length = table[start]
-        out[code] = "".join(TEXT_OF[tile] for tile in table[start + 1:start + 1 + length])
+        length = table[start] & ~item_line.SHORT_BIT
+        assert bool(table[start] & item_line.SHORT_BIT) == (code in item_line.SHORT)
+        out[code] = item_line.PREFIX + "".join(TEXT_OF[tile] for tile in table[start + 1:start + 1 + length])
     return out
 
 
@@ -44,6 +45,7 @@ def test_the_table_reads_back_and_fits(boots: bool) -> None:
     assert all(len(text) <= item_line.ROW_TILES for text in texts.values())
     assert not {int(item) for item in item_line.QUIET} & set(texts)
     assert texts[Item.RAFT] == "GOT RAFT"
+    assert texts[Item.BOMBS] == "GOT BOMBS" and texts[Item.KEY] == "GOT KEY"
     assert texts[Item.WOOD_BOOMERANG] == ("GOT PEGASUS BOOTS" if boots else "GOT BOOMERANG")
 
 

@@ -2,7 +2,8 @@
 (PPU $2022, 28 tiles) is read from the nametable.
 
   - Taking a floor item writes "GOT <item>" there, centered; about 6 seconds later the row is blank again.
-  - A code in the latch shows its text; bombs (code 0), the quiet items and codes past the table show nothing.
+  - A code in the latch shows its text; bombs, keys, maps and compasses for about 3 seconds; the quiet items, codes
+    past the table and $FF (no item) show nothing.
   - With Item Counter on too, both rows show."""
 from functools import cache
 
@@ -39,6 +40,8 @@ ROOM_ITEM_SLOT = 0x13
 SETTLE_FRAMES = 30
 SHOW_FRAMES = 4
 GONE_FRAMES = 2 * 180 + 10
+SHORT_FRAMES = 2 * 90
+NO_ITEM = 0xFF
 PICKUP_FRAMES = 120
 SEED = 3
 BLANK = bytes([CHAR_TO_BYTE[" "]]) * ROW_TILES
@@ -81,7 +84,7 @@ def enter(rom: bytes, level: int, room: int | None = None) -> Emulator:
 def test_the_row_starts_blank_and_the_bytes_start_clear() -> None:
     emu = enter(line_rom(), 0)
     assert emu.nametable(ROW, ROW_TILES) == BLANK
-    assert emu[LATCH] == 0 and emu[TIMER] == 0
+    assert emu[LATCH] == NO_ITEM and emu[TIMER] == 0
 
 
 @pytest.mark.parametrize("zora", [ON, BOTH], ids=["alone", "with-item-counter"])
@@ -92,7 +95,7 @@ def test_a_latched_item_shows_then_goes(zora: str) -> None:
     emu[LATCH] = Item.RAFT
     settle(emu, SHOW_FRAMES)
     assert emu.nametable(ROW, ROW_TILES) == row_for("GOT RAFT")
-    assert emu[LATCH] == 0
+    assert emu[LATCH] == NO_ITEM
     # The row's quadrants are palette 0 (white); the quadrants below keep theirs (the life meter's red).
     assert emu.nametable(ROW_ATTRIBUTES, 8) == bytes(byte & 0xF0 for byte in attributes)
     settle(emu, GONE_FRAMES)
@@ -101,7 +104,20 @@ def test_a_latched_item_shows_then_goes(zora: str) -> None:
         assert counter[0] == CHEST_TILE and emu.nametable(COUNTER, 1)[0] == CHEST_TILE
 
 
-@pytest.mark.parametrize("code", [Item.BOMBS, Item.KEY, Item.FIVE_RUPEES, item_line.ITEM_CODES, 0xFF])
+@pytest.mark.parametrize("code", [Item.BOMBS, Item.KEY, Item.MAP, Item.COMPASS])
+def test_short_items_show_for_half_the_time(code: Item) -> None:
+    emu = enter(line_rom(), 1)
+    emu[LATCH] = code
+    settle(emu, SHOW_FRAMES)
+    shown = row_for(item_line.item_texts()[code])
+    assert emu.nametable(ROW, ROW_TILES) == shown
+    settle(emu, SHORT_FRAMES - 20)
+    assert emu.nametable(ROW, ROW_TILES) == shown
+    settle(emu, 30)
+    assert emu.nametable(ROW, ROW_TILES) == BLANK
+
+
+@pytest.mark.parametrize("code", [Item.FIVE_RUPEES, item_line.ITEM_CODES, NO_ITEM])
 def test_quiet_codes_show_nothing(code: int) -> None:
     emu = enter(line_rom(), 1)
     emu[LATCH] = code
@@ -120,7 +136,7 @@ def test_taking_a_floor_item_shows_it() -> None:
             for _ in range(PICKUP_FRAMES):
                 emu[OBJ_X], emu[OBJ_Y] = emu[OBJ_X + ROOM_ITEM_SLOT], emu[OBJ_Y + ROOM_ITEM_SLOT]
                 settle(emu, 1)
-                if emu[LATCH]:
+                if emu[LATCH] != NO_ITEM:
                     taken = emu[LATCH]
                 if emu[TIMER]:
                     break

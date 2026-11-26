@@ -8,15 +8,20 @@
 ; ZORA Show Item Pickups: the status bar's top row says what Link just took.
 ;
 ; The seed's table (asm/rom_space.toml site "item-line-names"; zora/rom/item_line.py):
-;   ITEM_CODES low bytes, then ITEM_CODES high bytes: each item code's text, or a high byte of 0 for no line;
-;   a text: its length N (1-28), then N font tiles, "GOT " and the item's name.
-ItemLineNames := $B220
+;   ITEM_CODES low bytes, then ITEM_CODES high bytes: each item code's name, or a high byte of 0 for no line;
+;   a name: its length N (1-24, bit 7 set for half the show time), then N font tiles. "GOT " comes from GotTiles.
+ItemLineNames := $B240
 ITEM_CODES = $24
 
-ItemLineLatch := $F0                ; TakeItem's last item code, 0 once shown (bombs, code 0, show nothing)
+ItemLineLatch := $F0                ; TakeItem's last item code, $FF once shown (bombs are code 0)
 ItemLineTimer := $F1                ; every other frame one less while the line shows; at 0 the row is blanked
-ItemLineAttrReq := $F2              ; 1 after a line is written: the next NMI makes the top row palette 0 (white)
-SHOW_TIME = 180                     ; 180 x 2 frames: 6 seconds
+ItemLineAttrReq := $F2              ; bit 0 after a line is written: the next NMI makes the top row palette 0 (white);
+                                    ; bit 7 (ARMED) once ItemLine has run, so ClearRam's 0 in the latch is not bombs
+ARMED = $80
+NO_ITEM = $FF
+SHOW_TIME = 180                     ; 180 x 2 frames: 6 seconds; half that with the name's SHORT_BIT
+SHORT_BIT = $80
+GOT_TILES = 4
 
 ROW_ADDRESS_HIGH = $20              ; PPU $2022: the status bar's blank top row
 ROW_ADDRESS_LOW = $22
@@ -37,9 +42,17 @@ TilesLeft := $02
 ; ItemLineTail.
 ;
 ItemLine:
+    BIT ItemLineAttrReq
+    BMI @Armed
+    LDA #ARMED                      ; the first call since ClearRam: its 0 in the latch is no item
+    STA ItemLineAttrReq
+    LDA #NO_ITEM
+    STA ItemLineLatch
+@Armed:
     LDX ItemLineLatch
+    CPX #NO_ITEM
     BEQ @Timer
-    LDA #$00
+    LDA #NO_ITEM
     STA ItemLineLatch
     CPX #ITEM_CODES
     BCS @Timer                      ; not an item code
@@ -50,17 +63,34 @@ ItemLine:
     STA Text
     JSR BlankRecord
 
-    ; The text centered: its first tile at column (28 - N) / 2.
+    ; The show time: half with SHORT_BIT.
     LDY #$00
     LDA (Text), Y
+    ASL                             ; C = SHORT_BIT
+    LDA #SHOW_TIME
+    BCC :+
+    LSR
+:
+    STA ItemLineTimer
+
+    ; "GOT " and the name centered: the first tile at column (24 - N) / 2 + 3.
+    LDA (Text), Y
+    AND #<~SHORT_BIT
     STA TilesLeft
-    LDA #ROW_TILES
+    LDA #ROW_TILES-GOT_TILES
     SEC
     SBC TilesLeft
     LSR
     CLC
     ADC #3
     TAX
+    LDY #<-GOT_TILES
+:
+    LDA GotTiles-$100+GOT_TILES, Y   ; Y runs $FC-$FF
+    STA DynTileBuf, X
+    INX
+    INY
+    BNE :-                          ; Y = 0 again for the name
 :
     INY
     LDA (Text), Y
@@ -68,9 +98,7 @@ ItemLine:
     INX
     DEC TilesLeft
     BNE :-
-    LDA #SHOW_TIME
-    STA ItemLineTimer
-    LDA #$01
+    LDA #ARMED|1
     STA ItemLineAttrReq             ; the NMI makes the top row's colours white
     BNE @Written
 
@@ -102,8 +130,9 @@ ItemLine:
 ; write keeps the high nibble (the bottom quadrants, the life meter's). Ends as TransferCurTileBuf did: buffer empty.
 ItemLineAttr:
     LDA ItemLineAttrReq
-    BEQ @Done
-    LDA #$00
+    LSR
+    BCC @Done
+    LDA #ARMED
     STA ItemLineAttrReq
     LDX #$00
 @Quadrant:
@@ -153,3 +182,6 @@ BlankRecord:
     DEX
     BPL :-
     RTS
+
+GotTiles:                           ; "GOT " in the font
+    .BYTE $10, $18, $1D, $24

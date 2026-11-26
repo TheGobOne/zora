@@ -708,7 +708,7 @@ segment = "ZORA_F2_ITEM_LINE"
 owner = "flags2:item-line"
 bank = 6
 first = 0xB150
-last = 0xB21F
+last = 0xB23F
 
 [[slot]]
 segment = "ZORA_F2_ITEM_LINE_HOP_B5"
@@ -967,7 +967,7 @@ last = 0xED9F
 [[site]]
 name = "item-line-names"
 bank = 6
-first = 0xB220
+first = 0xB240
 last = 0xB3FF
 source = "zora.rom.item_line:TABLE"
 what = "Show Item Pickups' texts for each item code (ZORA flag show_item_pickups; asm/flags2/item-line), up to the end of the owner's reservation $B150-$B3FF"
