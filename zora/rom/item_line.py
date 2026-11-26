@@ -54,6 +54,8 @@ def item_line_table(pegasus_boots: bool = False) -> bytes:
         address = TABLE_CPU + 2 * ITEM_CODES + len(body)
         low[code], high[code] = address & 0xFF, address >> 8
         tiles = encode(texts[code])[len(PREFIX):]   # the patch writes "GOT "
+        if not tiles:
+            raise ValueError(f"item code {code} has an empty name")     # the patch's loop would run 256 times
         body += bytes([len(tiles) | (SHORT_BIT if code in SHORT else 0)]) + tiles
     table = bytes(low + high + body)
     if len(table) > TABLE_END - TABLE:

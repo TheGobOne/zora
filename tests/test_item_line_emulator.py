@@ -117,6 +117,21 @@ def test_short_items_show_for_half_the_time(code: Item) -> None:
     assert emu.nametable(ROW, ROW_TILES) == BLANK
 
 
+PAUSED = 0xE0
+
+
+def test_the_line_waits_while_paused() -> None:
+    emu = enter(line_rom(), 1)
+    emu[LATCH] = Item.RAFT
+    settle(emu, SHOW_FRAMES)
+    emu[PAUSED] = 1
+    settle(emu, GONE_FRAMES)
+    assert emu.nametable(ROW, ROW_TILES) == row_for("GOT RAFT")
+    emu[PAUSED] = 0
+    settle(emu, GONE_FRAMES)
+    assert emu.nametable(ROW, ROW_TILES) == BLANK
+
+
 @pytest.mark.parametrize("code", [Item.FIVE_RUPEES, item_line.ITEM_CODES, NO_ITEM])
 def test_quiet_codes_show_nothing(code: int) -> None:
     emu = enter(line_rom(), 1)

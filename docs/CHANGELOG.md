@@ -7,7 +7,7 @@ apart from the Cosmetic settings.
 
 ### New Features
 
-- **Show Item Pickups** (ZORA extras, Miscellaneous; beta: On, Off or Random; Off by default). Each time Link takes an item, the HUD's empty top row shows GOT and the item's name ("GOT RAFT") for about 6 seconds. Rupees, bombs, keys, hearts, fairies and clocks show nothing. The game writes the row itself, so it works in any emulator with no script. Works with Item Counter and Pegasus Boots ("GOT PEGASUS BOOTS"). Not offered in Archipelago, whose client writes the same row.
+- **Show Item Pickups** (ZORA extras, Miscellaneous; beta: On, Off or Random; Off by default). Each time Link takes an item, the HUD's empty top row shows GOT and the item's name ("GOT RAFT") for about 6 seconds, or about 3 seconds for bombs, keys, maps and compasses. Rupees, hearts, fairies and clocks show nothing. The game writes the row itself, so it works in any emulator with no script. Works with Item Counter and Pegasus Boots ("GOT PEGASUS BOOTS"). Not offered in Archipelago, whose client writes the same row.
 
 ## 2.0.1 (2026-11-18)
 

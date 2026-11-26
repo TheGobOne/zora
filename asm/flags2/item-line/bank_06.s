@@ -105,6 +105,8 @@ ItemLine:
 @Timer:
     LDA ItemLineTimer
     BEQ @Back
+    LDA Paused
+    BNE @Back                       ; the line waits while the game is paused
     LDA FrameCounter
     LSR
     BCC @Back

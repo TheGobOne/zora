@@ -43,6 +43,7 @@ def test_the_table_reads_back_and_fits(boots: bool) -> None:
     texts = read_texts(table)
     assert texts == item_line.item_texts(boots)
     assert all(len(text) <= item_line.ROW_TILES for text in texts.values())
+    assert all(0 < len(text) - len(item_line.PREFIX) <= 24 for text in texts.values())     # the patch centers 1-24
     assert not {int(item) for item in item_line.QUIET} & set(texts)
     assert texts[Item.RAFT] == "GOT RAFT"
     assert texts[Item.BOMBS] == "GOT BOMBS" and texts[Item.KEY] == "GOT KEY"
@@ -56,3 +57,9 @@ def test_the_rom_holds_the_table_only_with_the_flag() -> None:
     table = item_line.item_line_table()
     assert on[item_line.TABLE:item_line.TABLE + len(table)] == table
     assert set(off[item_line.TABLE:item_line.TABLE_END]) == {0xFF}
+
+
+def test_an_empty_name_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(item_line, "item_texts", lambda boots=False: {int(Item.RAFT): item_line.PREFIX})
+    with pytest.raises(ValueError, match="empty name"):
+        item_line.item_line_table()
