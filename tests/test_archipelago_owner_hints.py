@@ -92,7 +92,7 @@ def test_recipe_rebuild_matches_generation() -> None:
     result = archipelago.build_from_strings(*FLAG_CASES[CASE], SEED, rom)
     places = [p.name for p in result.state.places]
     assert len(places) == len(result.pool)
-    assignment: dict = dict(zip(places, result.pool))
+    assignment: dict = dict(zip(places, result.pool, strict=False))
     received: list[str] = []
     for name in places[:2]:
         received.append(assignment[name])

@@ -36,7 +36,7 @@ def test_registry_measures_and_summarizes() -> None:
     generated = parse_rom(serialize_to_rom(world, rom, config=GENERATED_HINTS))
     rows = summarize([measure_rom(parse_rom(rom)), measure_rom(generated)])
     assert len(rows) == len(CHECKPOINTS) and all(isinstance(r, str) and r for r in rows)
-    values = dict(zip((cp.measure for cp in CHECKPOINTS), measure_rom(generated)))
+    values = dict(zip((cp.measure for cp in CHECKPOINTS), measure_rom(generated), strict=False))
     assert values["ROMs with exactly one hungry goriya"] is True
     blank, unowned = values["unowned cells carrying the blank room"]
     assert blank == unowned >= 1

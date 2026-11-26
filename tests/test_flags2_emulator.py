@@ -409,7 +409,7 @@ def test_a_like_like_eats_rupees_not_the_shield() -> None:
             eaten_at += [frame] * (rupees - emu[INV_RUPEES])
         if name == "patched":
             assert (emu[INV_MAGIC_SHIELD], emu[INV_RUPEES]) == (1, 0)
-            gaps = {later - earlier for earlier, later in zip(eaten_at, eaten_at[1:])}
+            gaps = {later - earlier for earlier, later in zip(eaten_at, eaten_at[1:], strict=False)}
             assert gaps == {FRAMES_PER_EATEN_RUPEE}, gaps
         else:
             assert (emu[INV_MAGIC_SHIELD], emu[INV_RUPEES]) == (0, 50)

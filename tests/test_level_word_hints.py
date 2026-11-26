@@ -200,7 +200,7 @@ def test_generated_hints_take_the_word(seed: int, zora_flag_string: str) -> None
             assert text == with_word(" ".join(line.strip(BLANKS) for line in decoded_lines(text_body(rom, before))), word)
         spans = sorted(set(texts_after))
         assert all(end <= start for (_, end), (start, _) in
-                   zip([(o, o + n) for o, n in spans], spans[1:])), "two texts overlap"
+                   zip([(o, o + n) for o, n in spans], spans[1:], strict=False)), "two texts overlap"
 
 
 def test_the_default_leaves_the_hints() -> None:

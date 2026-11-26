@@ -133,7 +133,7 @@ def test_level_encoding_keeps_the_guarantees() -> None:
     allowed = level_encoding.changed_ranges_allowed()
     from zora.rom.code_patches import SEED_CODE_ADDRESS, SEED_CODE_LENGTH
     allowed.append((SEED_CODE_ADDRESS, SEED_CODE_ADDRESS + SEED_CODE_LENGTH))    # FP-HASH-01 hashes the ROM
-    outside = [i for i, (a, b) in enumerate(zip(plain, encoded))
+    outside = [i for i, (a, b) in enumerate(zip(plain, encoded, strict=False))
                if a != b and not any(lo <= i < hi for lo, hi in allowed)]
     assert not outside, [hex(i) for i in outside[:8]]
     assert level_encoding.decode_level_data(encoded, on.config.level_encoding) \

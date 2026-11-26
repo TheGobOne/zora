@@ -65,7 +65,7 @@ def test_metadata_fields_match_flags_module() -> None:
     fields = metadata["fields"]
     expected: list[OptionField | ToggleField] = [*flags_fields.OPTION_FIELDS, *flags_fields.TOGGLE_FIELDS]
     assert [field["id"] for field in fields] == [field.id for field in expected]
-    for entry, field in zip(fields, expected):
+    for entry, field in zip(fields, expected, strict=False):
         assert entry["setting"] == field.setting
         if isinstance(field, OptionField):
             assert entry["kind"] == "option"

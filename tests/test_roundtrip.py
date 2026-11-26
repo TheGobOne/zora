@@ -63,7 +63,7 @@ def test_parse_from_rom_slices_matches_bin_path(vanilla_rom: bytes, vanilla_worl
     gw2 = parse_game_world(load_bin_files_from_rom(vanilla_rom))
     assert len(gw2.levels) == 9
     assert len(vanilla_world.levels) == 9
-    for a, b in zip(vanilla_world.levels, gw2.levels):
+    for a, b in zip(vanilla_world.levels, gw2.levels, strict=False):
         assert [r.room_num for r in a.rooms] == [r.room_num for r in b.rooms]
 
 
@@ -192,7 +192,7 @@ def test_nothing_code_config_vanilla_is_default() -> None:
     out = bytearray(rom)
     patch.apply(out)
     gw2 = parse_rom(bytes(out), config=cfg)
-    for lvl, lvl2 in zip(gw.levels, gw2.levels):
+    for lvl, lvl2 in zip(gw.levels, gw2.levels, strict=False):
         nothing1 = {r.room_num for r in lvl.rooms if r.item == Item.NOTHING}
         nothing2 = {r.room_num for r in lvl2.rooms if r.item == Item.NOTHING}
         assert nothing1 == nothing2

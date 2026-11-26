@@ -80,7 +80,7 @@ def test_classify_separates_helpful_from_pool() -> None:
         roms.append(_rom(33, text, ("location", 1, region)))
     roms.append(_rom(33, "once", ("location", 1, 3)))
     verdicts = [rom[0] for rom in classify(roms)]
-    for rom, verdict in zip(roms, verdicts):
+    for rom, verdict in zip(roms, verdicts, strict=False):
         text = rom[0].text
         if text.startswith("helpful"):
             assert verdict == ("location", 1, int(text.split()[1]))

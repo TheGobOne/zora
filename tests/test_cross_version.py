@@ -102,7 +102,7 @@ def test_outputs_identical_across_interpreters_and_hash_seeds() -> None:
     reference_label, reference = next(iter(runs.items()))
     for label, hashes in runs.items():
         for mode, per_seed in reference.items():
-            differing = [seed for seed, (a, b) in enumerate(zip(per_seed, hashes[mode])) if a != b]
+            differing = [seed for seed, (a, b) in enumerate(zip(per_seed, hashes[mode], strict=False)) if a != b]
             assert not differing, (f"{label} differs from {reference_label} in {mode} "
                                    f"on seeds {differing[:10]}")
     print(f"identical: {sorted(runs)}")

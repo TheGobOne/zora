@@ -472,7 +472,7 @@ def check_seed_code(config: Config, built: Built, finished: GeneratedRom, fail: 
     allowed = theme_offsets(theme)
     if len(finished.rom) != len(expected) or any(
             built_byte != shipped and offset not in allowed
-            for offset, (built_byte, shipped) in enumerate(zip(expected, finished.rom))):
+            for offset, (built_byte, shipped) in enumerate(zip(expected, finished.rom, strict=False))):
         fail("the finished ROM is not the seed's ROM plus the player settings")
     stamped = before_settings[SEED_CODE_ADDRESS:SEED_CODE_ADDRESS + SEED_CODE_LENGTH]
     if stamped != expected_seed_code(built):

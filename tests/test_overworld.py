@@ -126,7 +126,7 @@ def test_cave_contents(rom: bytes) -> None:
     # the three sword caves hold their sword in the middle slot
     assert [all_caves[i].item_ids[1] for i in (0, 2, 3)] == [Item.WOOD_SWORD, Item.WHITE_SWORD, Item.MAGICAL_SWORD]
     shops = [c for c in all_caves if c.flags & SHOP_FLAGS == SHOP_FLAGS]
-    assert all(all(price for item, price in zip(c.item_ids, c.prices) if item != caves.NO_ITEM)
+    assert all(all(price for item, price in zip(c.item_ids, c.prices, strict=False) if item != caves.NO_ITEM)
                for c in shops)
     assert len(shops) >= 4
 
@@ -204,7 +204,7 @@ def test_shop_bytes(rom: bytes, finished: list) -> None:
     base = caves.read_caves(rom)
     base_prices: dict[int, set[int]] = {}
     for cave in base[13:17]:
-        for item, price in zip(cave.item_ids, cave.prices):
+        for item, price in zip(cave.item_ids, cave.prices, strict=False):
             base_prices.setdefault(item, set()).add(price)
     for out, _ in finished:
         shipped = caves.read_caves(out)
@@ -213,7 +213,7 @@ def test_shop_bytes(rom: bytes, finished: list) -> None:
         assert sorted(i for c in shops for i in c.item_ids) == sorted(i for c in base[13:17] for i in c.item_ids)
         assert all(len(set(c.item_ids)) == 3 for c in shops)
         for cave in shops:
-            for item, price in zip(cave.item_ids, cave.prices):
+            for item, price in zip(cave.item_ids, cave.prices, strict=False):
                 assert 1 <= price <= 254 and any(abs(price - p) <= 20 for p in base_prices[item])
         assert 25 <= shipped[10].prices[0] <= 55 and 48 <= shipped[10].prices[2] <= 88
         assert 25 <= shipped[17].prices[1] <= 40 and 50 <= shipped[18].prices[1] <= 150

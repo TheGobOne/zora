@@ -86,7 +86,7 @@ def test_determinism() -> None:
     b = _gen(8)
     assert [( [x for x in w.blob_of] ) for w in a.sets] == \
            [([x for x in w.blob_of]) for w in b.sets]
-    for wa, wb in zip(a.sets, b.sets):
+    for wa, wb in zip(a.sets, b.sets, strict=False):
         for cell in range(128):
             assert wa.plans[cell].enemy == wb.plans[cell].enemy
             assert wa.plans[cell].layout == wb.plans[cell].layout

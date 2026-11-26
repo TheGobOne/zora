@@ -68,7 +68,7 @@ def test_nothing_else_on_the_screen_changes() -> None:
     without = bytearray(rom)
     without[HOOK_OFFSET:HOOK_OFFSET + HOOK_LENGTH] = vanilla()[HOOK_OFFSET:HOOK_OFFSET + HOOK_LENGTH]
     shown, plain = screen_tiles(file_select(rom)), screen_tiles(file_select(bytes(without)))
-    differing = {(index // ROW_TILES, index % ROW_TILES) for index, (a, b) in enumerate(zip(shown, plain))
+    differing = {(index // ROW_TILES, index % ROW_TILES) for index, (a, b) in enumerate(zip(shown, plain, strict=False))
                  if a != b}
     assert differing == set(GUIDE)
 
