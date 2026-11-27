@@ -14,11 +14,12 @@ from dataclasses import dataclass, replace
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
-from ..model.enums import Destination, DungeonNothingCode, Item
+from ..model.enums import Destination, DungeonNothingCode, Item, RoomType
 from ..model.level_9_gate import TRIFORCE_LEVELS
 from ..model.level_items import ALL_LEVEL_ITEM_NAMES, LevelItemKind, level_item, level_of
 from ..model.overworld import Shop
 from ..rom.game_config import GameConfig
+from .level_swaps import NO_SWAPS, LevelSwaps
 from .places import Place, PlaceKind, is_never_a_place, item_pool, read_item, write_item
 from .rng import IntRng, Rng
 from .steps.item_shuffle_result import (
@@ -113,12 +114,17 @@ def written_item(value: Item | Foreign) -> Item:
 
 def refusals(places: list[Place], assignment: Assignment, pool: frozenset[Item]) -> list[str]:
     """Why the assignment cannot be written: a name that is no place of this build, an item
-    outside the build's pool (places.item_pool; FOREIGN aside), or an item the place forbids (R2)."""
+    outside the build's pool (places.item_pool; FOREIGN aside), or an item the place forbids (R2): at a compass
+    spot (Place.compass_spot), another player's filler too."""
     by_name = {place.name: place for place in places}
     reasons = [f"{name}: no such place in this seed" for name in assignment if name not in by_name]
     for name, value in assignment.items():
         place = by_name.get(name)
-        if place is None or isinstance(value, Foreign):
+        if place is None:
+            continue
+        if isinstance(value, Foreign):
+            if place.compass_spot and value.item_class is ItemClass.FILLER:
+                reasons.append(f"{name}: another player's filler is forbidden at a compass spot")
             continue
         if value not in pool:
             reasons.append(f"{name}: {value.name} is not in this seed's item pool")
@@ -419,7 +425,8 @@ def sanity_check(world: GameWorld, built: Built, tracking: Tracking, solo: bool,
     strict_state = replace(assigned, tracked=[*tracking.tracked, *(TrackedPlace(item) for item in tracking.elsewhere)])
     strict = acceptance_check(world.levels, strict_state, world.overworld, caves, rules, extras=extras)
     granted = acceptance_check(world.levels, assigned, world.overworld, caves, rules,
-                               granted=frozenset(int(item) for item in received), extras=extras)
+                               granted=frozenset(int(item) for item in received), extras=extras,
+                               granted_heart_containers=sum(item == Item.HEART_CONTAINER for item in received))
     return Sanity(solo, strict, granted)
 
 
@@ -449,20 +456,49 @@ def freeze_compass_targets(world: GameWorld) -> None:
             level.triforce_room_ptr = derive_triforce_room_ptr(level)
 
 
-def write_level_codes(world: GameWorld) -> None:
+MARKED_LEVELS = range(1, 9)             # level 9's compass marks Zelda's room, which holds no item
+
+
+def compass_item_rooms(world: GameWorld) -> tuple[int, ...]:
+    """Per-level mode's compass marker (asm/flags2/level-compass), from BUILD's world: for each data level 1-8 the
+    room whose item-taken flag the marker follows, so it blinks until the item at the piece's original spot is
+    taken, whatever that spot holds after the assignment. The spot is the marked room (freeze_compass_targets:
+    derive_triforce_room_ptr), or, where the piece stood in an item cellar, that cellar, under the marked room."""
+    from ..rom.serialize.levels import derive_triforce_room_ptr
+    rooms = []
+    for level_num in MARKED_LEVELS:
+        level = next(level for level in world.levels if level.level_num == level_num)
+        marked = level.triforce_room_ptr if level.triforce_room_ptr is not None else derive_triforce_room_ptr(level)
+        room = next((room for room in level.rooms if room.item == Item.TRIFORCE), None)
+        if room is not None:
+            assert room.room_num == marked, (level_num, room.room_num, marked)
+            rooms.append(room.room_num)
+            continue
+        cellar = next(stair for stair in level.staircase_rooms        # as derive_triforce_room_ptr finds it
+                      if stair.room_type == RoomType.ITEM_STAIRCASE and stair.item == Item.TRIFORCE)
+        assert cellar.exit_bytes()[0] == marked, (level_num, cellar.room_num, marked)
+        rooms.append(cellar.room_num)
+    return tuple(rooms)
+
+
+def write_level_codes(world: GameWorld, swaps: LevelSwaps = NO_SWAPS) -> None:
     """Per-level mode (docs/design/archipelago-items.md piece 6): the ROM reads the generic piece, map and
     compass as level 8's and level 9's, so each one BUILD left in a level's room or item cellar is written as
-    its own level's code. Run before the assignment is written, so it reaches the rooms that are no place, and a
+    its own level's code, or with Between levels as the code of the level `swaps` drew for that spot
+    (level_swaps.py). Run before the assignment is written, so it reaches the rooms that are no place, and a
     generic code the assignment puts in another level stays level 8's or level 9's."""
+    def code(item: Item, level_num: int) -> Item:
+        found = level_of(item)
+        assert found is not None
+        return level_item(found[0], swaps.code_in(found[0], level_num))
+
     for level in world.levels:
         for room in level.rooms:
-            if (found := level_of(room.item) if room.item in GENERIC_LEVEL_ITEMS else None) is not None:
-                room.item = level_item(found[0], level.level_num)
+            if room.item in GENERIC_LEVEL_ITEMS:
+                room.item = code(room.item, level.level_num)
         for stair in level.block.staircases:
             if stair.return_dest in level.room_nums and stair.item in GENERIC_LEVEL_ITEMS:
-                found = level_of(stair.item)
-                assert found is not None
-                stair.item = level_item(found[0], level.level_num)
+                stair.item = code(stair.item, level.level_num)
 
 
 def apply_assignment(world: GameWorld, built: Built, assignment: Assignment, rng: Rng, recompute: bool = True,
@@ -488,7 +524,7 @@ def apply_assignment(world: GameWorld, built: Built, assignment: Assignment, rng
         # first, before the assignment: an assigned generic code is level 8's piece or level 9's map or compass
         # wherever it goes, and must not be rewritten as the level it lands in
         freeze_compass_targets(world)
-        write_level_codes(world)
+        write_level_codes(world, extra_options(built.plan).level_swaps)
     for place in places:
         if place.name in assignment:
             write_item(world, place, written_item(assignment[place.name]))

@@ -27,6 +27,7 @@ from ..zora.flags.zora_flags import Pacing
 from ..zora.generate.acceptance_check import RING_LINE, SWORD_LINE, logic_walk_rules, rings_needed, swords_needed
 from ..zora.generate.logic import (
     CANDLE,
+    LEVEL9_ENTRY_EVENT,
     RING,
     SWORD,
     TRUE,
@@ -108,8 +109,8 @@ COMPASS_NAMES = frozenset(f"Level {level} Compass" for level in range(1, 10))
 
 
 def assert_level_items_pooled(test: ZoraTestBase, pieces: bool, maps: bool, compasses: bool) -> None:
-    """Add Triforces / Add Maps/Compasses to the Item Pool (docs/design/archipelago-items.md piece 6): each
-    switched-on level item is in the pool once, by its level's shown number, and no generic code is; every piece is
+    """Triforce Shuffle and Map & Compass Shuffle at Anywhere (docs/design/archipelago-items.md piece 6): each
+    pooled level item is in the pool once, by its level's shown number, and no generic code is; every piece is
     progression (classes.py, 2026-11-23), and ZORA places none of them; maps and compasses are useful. WorldTestBase
     checks every location is reached and the goal beaten with the items anywhere."""
     world = test.multiworld.worlds[test.player]
@@ -145,8 +146,9 @@ def assert_pacing(test: ZoraTestBase) -> None:
             continue
         rules_by_level = [(place.name, place.level, built.logic.places[place.name])
                           for place in built.state.places if place.level is not None]
+        # the Triforce events, with Triforce Shuffle Off or Between levels (Anywhere: their rooms are places, above)
         rules_by_level += [(triforce_event(level), level, built.logic.events[triforce_event(level)])
-                           for level in range(1, 9)]
+                           for level in range(1, 9) if triforce_event(level) in built.logic.events]
         asked = 0
         for name, level, rule in rules_by_level:
             count = needed(pacing, level)
@@ -196,8 +198,9 @@ class TestDefaults(ZoraTestBase):
         for event in events:                                # "Take Any 1E Heart"
             self.assertIn(int(event.split()[2], 16), shown, event)
 
-    def test_each_triforce_is_named_where_zora_put_it(self) -> None:
-        assert_triforce_spots(self)
+    def test_the_level_items_are_items_by_default(self) -> None:
+        """Triforce Shuffle and Map & Compass Shuffle default to Anywhere in Archipelago (owner, 2026-11-25)."""
+        assert_level_items_pooled(self, pieces=True, maps=True, compasses=True)
 
     def test_the_client_tables_carry_the_default_sound(self) -> None:
         """item_appears, Tune1Request $02 (owner decision, 2026-10-18)."""
@@ -319,6 +322,9 @@ class TestMinorDropsFillerSpots(ZoraTestBase):
             filler = {(name, player) for name in FILLER_ITEMS for player in (self.player, other)}
             if place.minor:
                 self.assertEqual({key for key, accepted in accepts.items() if accepted}, filler, place.name)
+            elif place.compass_spot:
+                # the room a level's compass marks takes no world's filler (per-level mode, Archipelago's default)
+                self.assertEqual({key for key, accepted in accepts.items() if not accepted}, filler, place.name)
             else:
                 self.assertEqual({key for key, accepted in accepts.items() if not accepted},
                                  {(name, self.player) for name in FILLER_ITEMS}, place.name)
@@ -447,7 +453,7 @@ class TestSecondQuestCosmetics(ZoraTestBase):
 class TestExpandedDungeonLocations(ZoraTestBase):
     """The nine dungeons dealt onto 9 of 15 entrances, every other cave shuffled (Cave Shuffle: All
     Caves): each dungeon's locations need its dealt entrance's items."""
-    options: ClassVar[dict[str, Any]] = {"expanded_dungeon_locations": "on"}
+    options: ClassVar[dict[str, Any]] = {"expanded_dungeon_locations": "on", "triforce_shuffle": "off"}
 
     def test_each_dungeon_needs_its_dealt_entrance(self) -> None:
         assert_dungeon_entrances(self)
@@ -461,6 +467,7 @@ class TestExpandedBracketsSecondQuest(ZoraTestBase):
     """Expanded Brackets (Cave Shuffle: Dungeons Only) on the 2nd Quest overworld, with the shops'
     wares as locations: a shop moved off a dealt entrance keeps its locations' names."""
     options: ClassVar[dict[str, Any]] = {
+        "triforce_shuffle": "off",
         "expanded_dungeon_locations": "on", "overworld_quest": "second_quest", "cave_shuffle": "dungeons_only",
         "shop_items_in_pool": "on"}
 
@@ -474,21 +481,57 @@ class TestExpandedBracketsSecondQuest(ZoraTestBase):
 class TestTriforcesInStairways(ZoraTestBase):
     """Allow Triforces in Stairways (1e1e9f6): each Triforce takes one of its own level's item spots,
     a floor or a stairway, before Archipelago's fill, with Mixed + Shapes dungeons."""
-    options: ClassVar[dict[str, Any]] = {"allow_triforces_in_stairways": "on", "dungeon_quest": "mixed_plus_shapes"}
+    options: ClassVar[dict[str, Any]] = {"allow_triforces_in_stairways": "on", "dungeon_quest": "mixed_plus_shapes",
+                                         "triforce_shuffle": "off"}
 
     def test_each_triforce_is_named_where_zora_put_it(self) -> None:
         assert_triforce_spots(self)
 
 
+class TestLevelItemsOff(ZoraTestBase):
+    options: ClassVar[dict[str, Any]] = {"triforce_shuffle": "off", "map_compass_shuffle": "off"}
+
+    def test_each_triforce_is_named_where_zora_put_it(self) -> None:
+        assert_level_items_pooled(self, pieces=False, maps=False, compasses=False)
+
+
+class TestLevelItemsBetweenLevels(ZoraTestBase):
+    """Between levels: the pieces stay events at Off's spots, nothing joins the pool, and with Level 9 Entry: Specific
+    Triforces level 9 asks for the events of the levels the chosen levels' pieces were drawn into."""
+    options: ClassVar[dict[str, Any]] = {"triforce_shuffle": "between_levels", "map_compass_shuffle": "between_levels",
+                                         "level_9_entry": "specific_triforces"}
+
+    def test_the_pieces_stay_events(self) -> None:
+        assert_level_items_pooled(self, pieces=False, maps=False, compasses=False)
+
+    def test_level_9_asks_for_the_drawn_levels(self) -> None:
+        built = self.multiworld.worlds[self.player].built
+        rules = extra_options(built.state.plan).logic_rules
+        gate = built.state.world.level_9_gate
+        events = {term.name for clause in built.logic.events[LEVEL9_ENTRY_EVENT] for term in clause
+                  if isinstance(term, EventTerm)}
+        if gate.levels:
+            self.assertEqual(events, {triforce_event(rules.triforce_codes.index(level) + 1) for level in gate.levels})
+
+
+class TestRenamedLevelItemKeys(ZoraTestBase):
+    """2.0.2's test release's keys still load: add_triforces_to_pool off is Triforce Shuffle: Off, and
+    add_maps_compasses_to_pool on is Map & Compass Shuffle: Anywhere."""
+    options: ClassVar[dict[str, Any]] = {"add_triforces_to_pool": "off", "add_maps_compasses_to_pool": "on"}
+
+    def test_the_old_keys_are_read(self) -> None:
+        assert_level_items_pooled(self, pieces=False, maps=True, compasses=True)
+
+
 class TestTriforcesInPool(ZoraTestBase):
-    options: ClassVar[dict[str, Any]] = {"add_triforces_to_pool": "on"}
+    options: ClassVar[dict[str, Any]] = {"triforce_shuffle": "anywhere", "map_compass_shuffle": "off"}
 
     def test_the_pieces_are_items(self) -> None:
         assert_level_items_pooled(self, pieces=True, maps=False, compasses=False)
 
 
 class TestMapsCompassesInPool(ZoraTestBase):
-    options: ClassVar[dict[str, Any]] = {"add_maps_compasses_to_pool": "on"}
+    options: ClassVar[dict[str, Any]] = {"map_compass_shuffle": "anywhere", "triforce_shuffle": "off"}
 
     def test_the_maps_and_compasses_are_items(self) -> None:
         assert_level_items_pooled(self, pieces=False, maps=True, compasses=True)
@@ -497,11 +540,44 @@ class TestMapsCompassesInPool(ZoraTestBase):
 class TestLevelItemsInPoolSpecificTriforces(ZoraTestBase):
     """Both switches, Level 9 Entry: Specific Triforces and Remove Maps: no map in the pool, and level 9
     asks for the chosen levels' pieces wherever they were filled."""
-    options: ClassVar[dict[str, Any]] = {"add_triforces_to_pool": "on", "add_maps_compasses_to_pool": "on",
+    options: ClassVar[dict[str, Any]] = {"triforce_shuffle": "anywhere", "map_compass_shuffle": "anywhere",
                                          "level_9_entry": "specific_triforces", "remove_maps": "on"}
 
     def test_the_pieces_and_compasses_are_items(self) -> None:
         assert_level_items_pooled(self, pieces=True, maps=False, compasses=True)
+
+
+class TestCompassSpotsTakeNoFiller(ZoraTestBase):
+    """Per-level mode (owner, 2026-11-25): the room or item cellar each level's compass marks (Place.compass_spot,
+    the piece's original spot) takes no world's filler, so the compass always points at a real item; with Shuffle
+    Minor Dungeon Drops on, this world's Bombs, 5 Rupees and Keys are in the pool."""
+    options: ClassVar[dict[str, Any]] = {"triforce_shuffle": "anywhere", "shuffle_minor_dungeon_drops": "on"}
+
+    def test_the_item_rules(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        spots = [place for place in world.places if place.compass_spot]
+        self.assertTrue(spots)
+        other = self.player + 1
+        for place in spots:
+            rule = self.multiworld.get_location(place.name, self.player).item_rule
+            for player in (self.player, other):
+                for name in FILLER_ITEMS:
+                    self.assertFalse(rule(ZoraItem(name, ItemClassification.filler, ITEM_NAME_TO_ID[name], player)),
+                                     (place.name, name, player))
+                for name, classification in (("Wand", ItemClassification.useful),
+                                             ("Raft", ItemClassification.progression)):
+                    self.assertTrue(rule(ZoraItem(name, classification, ITEM_NAME_TO_ID[name], player)),
+                                    (place.name, name, player))
+
+    def test_no_compass_spot_holds_filler_after_the_fill(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        distribute_items_restrictive(self.multiworld)      # WorldTestBase stops before the fill
+        for place in world.places:
+            if place.compass_spot:
+                placed = self.multiworld.get_location(place.name, self.player).item
+                assert placed is not None
+                self.assertTrue(placed.advancement or placed.useful, place.name)
+        self.assertTrue(self.multiworld.can_beat_game(self.multiworld.state))
 
 
 @skip_unless_bomb_upgrades

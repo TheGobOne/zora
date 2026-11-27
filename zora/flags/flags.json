@@ -24,10 +24,10 @@
     "item_counter": {
       "beta": "all"
     },
-    "add_triforces_to_pool": {
+    "triforce_shuffle": {
       "beta": "all"
     },
-    "add_maps_compasses_to_pool": {
+    "map_compass_shuffle": {
       "beta": "all"
     },
     "bomb_upgrades_in_pool": {

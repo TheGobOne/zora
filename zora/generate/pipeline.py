@@ -128,7 +128,7 @@ from ..flags.support import (
     unsupported_fields,
     with_random_level_encoding_off,
 )
-from ..flags.zora_flags import SpoilerLevel, ZoraFlags, ZoraFlagStringError, spoiler_level
+from ..flags.zora_flags import LevelItemShuffle, SpoilerLevel, ZoraFlags, ZoraFlagStringError, spoiler_level
 from ..model.enums import Destination, DungeonNothingCode
 from ..model.overworld import ItemCave
 from ..rom import level_encoding
@@ -138,6 +138,7 @@ from ..rom.player_settings import DEFAULT_PLAYER_SETTINGS, PlayerSettings, check
 from .alternative_values import AlternativeValues
 from .extra_options import ExtraOptions
 from .flag_steps import FlagSteps
+from .level_swaps import NO_SWAPS, LevelSwaps, draw_level_swaps, swaps_seed
 from .rng import Rng
 from .shapes.options import ShapeOptions
 from .steps.expanded_dungeon_locations import expanded_dungeon_locations_seed
@@ -664,9 +665,31 @@ def generate_world(chosen: GenerationPlan, base_rom: bytes | PlayerRom) -> tuple
     return world, result
 
 
+def level_item_shuffles(chosen: GenerationPlan) -> tuple[LevelItemShuffle, LevelItemShuffle]:
+    """Triforce Shuffle and Map & Compass Shuffle as the seed acts on them. Between levels does nothing under Item
+    Shuffle: None, where the page says neither setting has any effect (solo_assignment.acts)."""
+    no_shuffle = chosen.settings.option(ITEM_SHUFFLE_SCOPE) == ItemShuffleScope.NONE
+
+    def acted(value: LevelItemShuffle) -> LevelItemShuffle:
+        return LevelItemShuffle.OFF if no_shuffle and value is LevelItemShuffle.BETWEEN_LEVELS else value
+
+    return acted(chosen.zora_resolved.triforce_shuffle), acted(chosen.zora_resolved.map_compass_shuffle)
+
+
+def level_swaps(chosen: GenerationPlan) -> LevelSwaps:
+    """Between levels' swaps for the seed (level_swaps.py), drawn on their own stream; the identity without it."""
+    triforces, maps_compasses = level_item_shuffles(chosen)
+    if LevelItemShuffle.BETWEEN_LEVELS not in (triforces, maps_compasses):
+        return NO_SWAPS
+    key = swaps_seed(chosen.seed, chosen.flag_string, chosen.zora_game_string)
+    return draw_level_swaps(key, triforces is LevelItemShuffle.BETWEEN_LEVELS,
+                            maps_compasses is LevelItemShuffle.BETWEEN_LEVELS)
+
+
 def extra_options(chosen: GenerationPlan) -> ExtraOptions:
     """The ZORA extras' switches and the heart figures the magical sword's check needs."""
     from ..model.enums import Item
+    triforces, maps_compasses = level_item_shuffles(chosen)
     return ExtraOptions(
         randomize_magical_sword=chosen.zora.randomize_magical_sword,
         randomize_letter=chosen.zora.randomize_letter,
@@ -705,8 +728,11 @@ def extra_options(chosen: GenerationPlan) -> ExtraOptions:
         start_triforce_pieces=chosen.alternatives.start_triforce_pieces,
         wizzrobes_shoot_wallmasters=chosen.zora_resolved.is_on("wizzrobes_shoot_wallmasters"),
         minor_dungeon_drops=chosen.alternatives.minor_dungeon_drops,
-        add_triforces_to_pool=chosen.zora_resolved.is_on(zora_flags.ADD_TRIFORCES_FIELD),
-        add_maps_compasses_to_pool=chosen.zora_resolved.is_on(zora_flags.ADD_MAPS_COMPASSES_FIELD),
+        add_triforces_to_pool=triforces is LevelItemShuffle.ANYWHERE,
+        add_maps_compasses_to_pool=maps_compasses is LevelItemShuffle.ANYWHERE,
+        triforces_between_levels=triforces is LevelItemShuffle.BETWEEN_LEVELS,
+        maps_compasses_between_levels=maps_compasses is LevelItemShuffle.BETWEEN_LEVELS,
+        level_swaps=level_swaps(chosen),
         bomb_upgrades_in_pool=chosen.zora_resolved.bomb_upgrades_in_pool,
     )
 
@@ -791,7 +817,8 @@ def finish(built: Built, base_rom: bytes | PlayerRom, assignment: Assignment | N
         assert not slot_identity, "a slot identity is External mode's"
         config = replace(finished.config, one_time_places=built.plan.config.one_time_places,
                          item_counter_table=with_item_counter(built).item_counter_table,
-                         per_level_shown=per_level_shown(built, world))
+                         per_level_shown=per_level_shown(built, world),
+                         per_level_compass_rooms=per_level_compass_rooms(built))
         return serialize_to_rom(written_world(world, config), base_rom, config=config,
                                 player_settings=player_settings)
     # Item Counter: the same table as ZORA mode's, from the built places (taking one counts whatever the assignment
@@ -799,16 +826,26 @@ def finish(built: Built, base_rom: bytes | PlayerRom, assignment: Assignment | N
     config = replace(finished.config, slot_identity=slot_identity, archipelago_rom=True, seed_number=None,
                      item_counter_table=with_item_counter(built).item_counter_table,
                      per_level_shown=per_level_shown(built, world),
+                     per_level_compass_rooms=per_level_compass_rooms(built),
                      bomb_upgrade_sellers=extra_options(built.plan).bomb_upgrades_in_pool)
     return serialize_to_rom(written_world(world, config), base_rom, config=config, player_settings=player_settings)
 
 
 def per_level_shown(built: Built, world: GameWorld) -> tuple[int, ...]:
     """Per-level mode's numbers (docs/design/archipelago-items.md piece 6): the status bar's number of each
-    data level 1-9, or () when neither pool switch is on."""
-    if not built.plan.zora_resolved.per_level_items:
+    data level 1-9, or () with both level-item shuffles Off."""
+    if not extra_options(built.plan).per_level_items:
         return ()
     return tuple(level.rom_level_num for level in sorted(world.levels, key=lambda level: level.level_num))
+
+
+def per_level_compass_rooms(built: Built) -> tuple[int, ...]:
+    """Per-level mode's compass marker (asm/flags2/level-compass): for data levels 1-8 the room whose item it
+    blinks until taken, read from BUILD's world (finish.compass_item_rooms); () with both level-item shuffles Off."""
+    if not extra_options(built.plan).per_level_items:
+        return ()
+    from .finish import compass_item_rooms
+    return compass_item_rooms(built.world)
 
 
 def with_item_counter(built: Built) -> GameConfig:
@@ -861,7 +898,7 @@ def generate_rom(flag_string: str, seed: int, base_rom: bytes,
     BUILD, then FINISH with no assignment (ZORA mode). Disable Custom Music on refuses a random
     Music value (PlayerSettingError). A graphics theme's tiles go into a working copy of the base
     ROM first (graphics_theme.themed_player_rom), which the generation parses and copies from.
-    With Add Triforces or Add Maps/Compasses to the Item Pool resolved On under any Item Shuffle but None,
+    With Triforce Shuffle or Map & Compass Shuffle away from Off under any Item Shuffle but None,
     FINISH takes the level items' solo assignment (solo_assignment; docs/design/archipelago-items.md piece 7)."""
     from ..rom.code_patches import seed_code
     from ..rom.graphics_theme import themed_player_rom

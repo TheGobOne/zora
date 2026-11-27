@@ -108,7 +108,8 @@ def write_code_patches(rom: bytearray, world: GameWorld, settings: FinalSettings
         rom[address:address + len(data)] = data
     for address, data in owner_patches.owner_patch_writes(config.owner_flags, config.level_9_entrance_sword,
                                                           config.archipelago_rom,
-                                                          config.archipelago_rom or bool(config.per_level_shown)):
+                                                          config.archipelago_rom or bool(config.per_level_shown),
+                                                          per_level=bool(config.per_level_shown)):
         rom[address:address + len(data)] = data
     if LOST_HILLS in config.owner_flags:
         # the layouts $7C-$7F its routine reads: $0B's own copies of $7B and $0A (extra_layouts)
@@ -129,6 +130,8 @@ def write_code_patches(rom: bytearray, world: GameWorld, settings: FinalSettings
             rom[address:address + len(data)] = data
     if config.per_level_shown:
         for address, data in level_items.per_level_writes(config.per_level_shown, rom):
+            rom[address:address + len(data)] = data
+        for address, data in level_items.compass_room_writes(config.per_level_compass_rooms):
             rom[address:address + len(data)] = data
     if config.archipelago_rom or config.per_level_shown:
         for address, data in level_items.bomb_upgrade_writes(rom, config.bomb_upgrade_sellers):

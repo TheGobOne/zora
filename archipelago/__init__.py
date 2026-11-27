@@ -83,7 +83,7 @@ class ZoraWorld(World):
         self.rom_name_available = threading.Event()
 
     def generate_early(self) -> None:
-        values = zora_values(self.options)
+        values = zora_values(self.options, self.player_name)
         flag_string, zora_flag_string = zora_ap.flag_strings(values)
         beta = zora_ap.beta_in_use(values)
         if beta:
@@ -113,10 +113,11 @@ class ZoraWorld(World):
             location = ZoraLocation(self.player, place.name, LOCATION_NAME_TO_ID[place.name], menu)
             location.access_rule = state_rule(model.places[place.name], self.player, model, self.naming)
             forbidden = frozenset(self.naming.archipelago_name(name) for name in place.forbids)
-            # a minor place is a filler spot: any world's filler, never anything else; every other place takes
-            # anything but this world's own filler (docs/archipelago.md "Item classes and filler spots")
-            location.item_rule = lambda item, forbidden=forbidden, minor=place.minor: (
-                (is_filler(item) if minor else not is_own_filler(item, self.player))
+            # a minor place is a filler spot: any world's filler, never anything else; a compass spot (per-level
+            # mode: the room or cellar a level's compass marks) no world's filler; every other place takes anything
+            # but this world's own filler (docs/archipelago.md "Item classes and filler spots")
+            location.item_rule = lambda item, forbidden=forbidden, minor=place.minor, spot=place.compass_spot: (
+                (is_filler(item) if minor else not is_filler(item) if spot else not is_own_filler(item, self.player))
                 and (item.player != self.player or item.name not in forbidden)
             )
             menu.locations.append(location)

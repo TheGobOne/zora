@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from ..flags.fields import WoodenSwordState
 from ..flags.zora_flags import OopsAllBosses, OopsAllEnemies, Pacing
 from .acceptance_check import LogicRules, PacingHearts, logic_rules
+from .level_swaps import NO_SWAPS, LevelSwaps
 from .steps.change_sword_hearts import MAGICAL_SWORD_HEARTS
 from .steps.overworld_gates import NO_GATES, OverworldGates
 from .steps.shop_prices import PriceRules
@@ -88,14 +89,19 @@ class ExtraOptions:
     # Not a ZORA extra: Shuffle Minor Dungeon Drops (B17, PS-ITEM-14), resolved. Its bombs, five rupees and
     # keys are item places too (places.item_pool; docs/design/archipelago-items.md piece 3)
     minor_dungeon_drops: bool = False
-    # Add Triforces / Maps/Compasses to the Item Pool (ZORA version 23, resolved; docs/design/
-    # archipelago-items.md pieces 6 and 7): the levels' pieces, maps and compasses are places and pool items
+    # Triforce Shuffle and Map & Compass Shuffle (ZORA version 23; docs/design/archipelago-items.md pieces 6 and 7).
+    # Anywhere: the levels' pieces, or maps and compasses, are places and pool items. Between levels: BUILD places
+    # them as Off does and FINISH writes each spot's item as the level level_swaps drew (level_swaps.py)
     add_triforces_to_pool: bool = False
     add_maps_compasses_to_pool: bool = False
+    triforces_between_levels: bool = False
+    maps_compasses_between_levels: bool = False
+    level_swaps: LevelSwaps = NO_SWAPS
 
     @property
     def per_level_items(self) -> bool:
-        return self.add_triforces_to_pool or self.add_maps_compasses_to_pool
+        return (self.add_triforces_to_pool or self.add_maps_compasses_to_pool or self.triforces_between_levels
+                or self.maps_compasses_between_levels)
 
     @property
     def oops_all(self) -> bool:
@@ -128,6 +134,7 @@ class ExtraOptions:
                            offense_pacing=self.offense_pacing, defense_pacing=self.defense_pacing,
                            recorder_warps=self.recorder_warps,
                            swordlish_pieces=self.swordlish_pieces, start_triforce_pieces=self.start_triforce_pieces,
+                           triforce_codes=self.level_swaps.triforce,
                            pacing_hearts=PacingHearts(self.starting_heart_containers, max(self.white_sword_hearts),
                                                       max(self.magical_sword_hearts)))
 

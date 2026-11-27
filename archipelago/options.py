@@ -163,6 +163,26 @@ def never_offered_class(spec: zora_ap.OptionSpec) -> type[Choice]:
     return register(class_name_of(spec.key), (Choice,), namespace)
 
 
+RENAMED_NOT_GIVEN, RENAMED_OFF, RENAMED_ON = 0, 1, 2
+
+
+def renamed_class(old_key: str) -> type[Choice]:
+    """A renamed option's old key (zora.archipelago.RENAMED_OPTIONS) as a hidden option: not given by default; off or
+    on (a YAML's false or true) is read as the new option's value, with a note (zora_values)."""
+    namespace: dict[str, Any] = {
+        "__doc__": f"Renamed {zora_ap.RENAMED_OPTIONS[old_key]}.",
+        "display_name": old_key,
+        "default": RENAMED_NOT_GIVEN,
+        "visibility": Visibility.none,
+        "option_not_given": RENAMED_NOT_GIVEN,
+        "option_off": RENAMED_OFF,
+        "option_on": RENAMED_ON,
+        "alias_false": RENAMED_OFF,
+        "alias_true": RENAMED_ON,
+    }
+    return register(class_name_of(old_key), (Choice,), namespace)
+
+
 OPTION_SPECS: tuple[zora_ap.OptionSpec, ...] = tuple(zora_ap.option_fields())
 SETTING_SPECS: tuple[zora_ap.PlayerSettingSpec, ...] = tuple(zora_ap.player_setting_fields())
 OPTION_CLASSES: dict[str, type[Choice]] = {spec.key: flag_class(spec) for spec in OPTION_SPECS}
@@ -171,20 +191,34 @@ NEVER_OFFERED_CLASSES: dict[str, type[Choice]] = {spec.key: never_offered_class(
                                                    for spec in zora_ap.never_offered_fields()}
 assert not set(OPTION_CLASSES) & set(SETTING_CLASSES), "a player setting shares an option's key"
 assert not set(NEVER_OFFERED_CLASSES) & (set(OPTION_CLASSES) | set(SETTING_CLASSES)), "a hidden option is offered"
+RENAMED_CLASSES: dict[str, type[Choice]] = {old_key: renamed_class(old_key) for old_key in zora_ap.RENAMED_OPTIONS}
+assert not set(RENAMED_CLASSES) & (set(OPTION_CLASSES) | set(SETTING_CLASSES) | set(NEVER_OFFERED_CLASSES))
 
 # Archipelago's own options, which are no ZORA flag or player setting: DeathLink (client-only,
 # docs/design/archipelago-items.md piece 2) changes neither the ROM nor the recipe.
 ARCHIPELAGO_OPTIONS: dict[str, type[Any]] = {"death_link": DeathLink}
-assert not set(ARCHIPELAGO_OPTIONS) & (set(OPTION_CLASSES) | set(SETTING_CLASSES) | set(NEVER_OFFERED_CLASSES))
+assert not set(ARCHIPELAGO_OPTIONS) & (set(OPTION_CLASSES) | set(SETTING_CLASSES) | set(NEVER_OFFERED_CLASSES)
+                                       | set(RENAMED_CLASSES))
 
 ZoraOptions = make_dataclass("ZoraOptions", [*OPTION_CLASSES.items(), *SETTING_CLASSES.items(),
-                                             *NEVER_OFFERED_CLASSES.items(), *ARCHIPELAGO_OPTIONS.items()],
+                                             *NEVER_OFFERED_CLASSES.items(), *RENAMED_CLASSES.items(),
+                                             *ARCHIPELAGO_OPTIONS.items()],
                              bases=(PerGameCommonOptions,))
 
 
-def zora_values(options: Any) -> dict[str, int]:
-    """The chosen flags as zora.archipelago.flag_strings takes them: option key -> value."""
-    return {key: int(getattr(options, key).value) for key in OPTION_CLASSES}
+def zora_values(options: Any, player_name: str = "") -> dict[str, int]:
+    """The chosen flags as zora.archipelago.flag_strings takes them: option key -> value. A renamed option's old
+    key, when the YAML gives it, sets the new option, with a note in the log."""
+    values = {key: int(getattr(options, key).value) for key in OPTION_CLASSES}
+    for old_key in RENAMED_CLASSES:
+        given = int(getattr(options, old_key).value)
+        if given == RENAMED_NOT_GIVEN:
+            continue
+        new_key, value, note = zora_ap.renamed_option(old_key, "on" if given == RENAMED_ON else "off")
+        assert value is not None
+        values[new_key] = value
+        logging.warning(f"ZORA ({player_name}): {note}." if player_name else f"ZORA: {note}.")
+    return values
 
 
 def setting_value(option: Choice) -> str | int:

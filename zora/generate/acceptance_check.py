@@ -209,6 +209,10 @@ class LogicRules:
     # piece as its own code (level_items), so a level's Triforce room is the one holding that code. With Add
     # Maps/Compasses alone the pieces stay events; this keeps the walk finding them.
     per_level_codes: bool = False
+    # Triforce Shuffle: Between levels (level_swaps.py): the level whose piece lies in each data level 1-8, in that
+    # order. Taking the piece in level L wins level triforce_codes[L - 1]'s piece, which a level-9 gate naming
+    # levels (FP-TRIF-03) asks for; the identity otherwise.
+    triforce_codes: tuple[int, ...] = tuple(range(1, 9))
     # Which walk (dungeon_walk.WalkRules): VA-REJ-17/18's in generation (ZORA mode and the
     # original randomizer's validator); the logic walk only for Archipelago's rules and FINISH's
     # sanity check (logic_walk_rules)
@@ -243,7 +247,8 @@ class LogicRules:
         """VA-REJ-07: the gate's pieces are won (the closure's completed levels, 1 to 8 only)."""
         gate = self.level_9_gate
         if gate.kind is GateKind.LEVELS:
-            return gate.levels <= completed
+            # the pieces won: each completed level's own, or with Triforce Shuffle: Between levels the one it holds
+            return gate.levels <= {self.triforce_codes[level - 1] for level in completed & TRIFORCE_LEVEL_SET}
         return len(completed & TRIFORCE_LEVEL_SET) >= gate.pieces
 
     @property
@@ -286,7 +291,7 @@ def logic_rules(progressive_items: bool, shop_items_in_pool: bool, gates: Overwo
                 expanded_recorder_set: bool = False, offense_pacing: Pacing = Pacing.OFF,
                 defense_pacing: Pacing = Pacing.OFF, recorder_warps: bool = False,
                 pacing_hearts: PacingHearts | None = None, swordlish_pieces: int = 0,
-                start_triforce_pieces: int = 0) -> LogicRules:
+                start_triforce_pieces: int = 0, triforce_codes: tuple[int, ...] = tuple(range(1, 9))) -> LogicRules:
     """Plan section 5, the owner's 2.0 overworld gates and ASNB's level-9 entrance: each rule only
     when its flag is on. Every overworld quest but the first (C01 = 1, 2, 3) reads the
     eleven-screen recorder set (OW-MIX-08, OW-QST-02, OW-QST-04: an entry door or the white-sword
@@ -313,6 +318,8 @@ def logic_rules(progressive_items: bool, shop_items_in_pool: bool, gates: Overwo
                         pacing_hearts=pacing_hearts if offense_pacing is not Pacing.OFF else None)
     if recorder_warps:
         rules = replace(rules, recorder_warps=True)
+    if triforce_codes != rules.triforce_codes:
+        rules = replace(rules, triforce_codes=triforce_codes)
     if swordlish_pieces:
         rules = replace(rules, swordlish_pieces=swordlish_pieces, start_triforce_pieces=start_triforce_pieces)
     if gates.any:
@@ -393,6 +400,10 @@ class AcceptanceCheck:
     granted: frozenset[int] = frozenset()
     # The ZORA extras' caves and joined shop wares, which Offense Item Pacing's heart count reads
     extras: "ExtraPoolItems | None" = None
+    # The Heart Containers among the granted items, counted: `granted` is a set, so received copies would collapse
+    # into one. Offense Item Pacing's heart count adds them (2.0.2: a multiworld game whose Heart Containers other
+    # worlds held failed FINISH's granted walk, its magical-sword cave never met, while Archipelago counted them)
+    granted_heart_containers: int = 0
     _walks: dict[tuple[int, int | None, frozenset[int]], Walk] = field(default_factory=dict)
 
     def _level(self, level_num: int) -> Level:
@@ -476,7 +487,7 @@ class AcceptanceCheck:
         """The level's Triforce is reached (entry aside): the room holding it, or with Allow
         Triforces in Stairways the item cellar holding it, once the walk enters that cellar from
         the room with its stairs (docs/zora-extras.md section 13)."""
-        piece = (level_item(LevelItemKind.TRIFORCE, level)
+        piece = (level_item(LevelItemKind.TRIFORCE, self.rules.triforce_codes[level - 1])
                  if self.rules.per_level_codes and level in TRIFORCE_LEVEL_SET else Item.TRIFORCE)
         return self._can_reach_item(level, piece, held)
 
@@ -509,7 +520,7 @@ class AcceptanceCheck:
         if rules == self.rules:
             return self
         return AcceptanceCheck(self.levels, self.item_shuffle_result, self.overworld, self.caves, rules, self.granted,
-                               self.extras)
+                               self.extras, self.granted_heart_containers)
 
     def reaches_cave(self, cave: Destination, held: frozenset[int]) -> bool:
         """A one-item cave (the white-sword cave, a ZORA extra's): its first screen's needs are
@@ -673,9 +684,10 @@ class AcceptanceCheck:
         extras = self.extras if self.extras is not None else ExtraPoolItems()
         take_any = take_any_heart_allowance(reachable_take_any_hearts(self.overworld, held, self.rules))
         places = heart_container_places(self.levels, self.item_shuffle_result, extras)
-        reachable = count_reachable_heart_containers(places, _ClosureReach(self, held), model.starting + take_any,
+        reachable = count_reachable_heart_containers(places, _ClosureReach(self, held),
+                                                     model.starting + take_any + self.granted_heart_containers,
                                                      model.white_sword)
-        return model.starting + take_any + reachable
+        return model.starting + take_any + reachable + self.granted_heart_containers
 
     def holds_gate_item(self, held: frozenset[int]) -> bool:
         """FP-TRIF-06: the item level 9's entrance asks for is held. A sword, a candle or an arrow is
@@ -738,14 +750,17 @@ class AcceptanceCheck:
 
 def acceptance_check(levels: list[Level], item_shuffle_result: ItemShuffleResult, overworld: Overworld,
                      caves: CaveShuffle, rules: LogicRules = DEFAULT_RULES,
-                     granted: frozenset[int] = frozenset(), extras: "ExtraPoolItems | None" = None) -> str | None:
+                     granted: frozenset[int] = frozenset(), extras: "ExtraPoolItems | None" = None,
+                     granted_heart_containers: int = 0) -> str | None:
     """VA-REJ-12: E1, E3, ZORA's E10, E4, E5, under Swordless E6 (VA-REJ-22), and, last, E9 (VA-REJ-21)
     in order;
     the first failure's label,
     or None when the pass is accepted. levels: the pass's nine staged levels.
     E4/E5 are skipped under Shop Items in the Item Pool (PI-LOGIC-05).
-    granted: items held from the start (AcceptanceCheck.granted; none in ZORA)."""
-    checks = AcceptanceCheck(levels, item_shuffle_result, overworld, caves, rules, granted, extras)
+    granted: items held from the start (AcceptanceCheck.granted; none in ZORA), granted_heart_containers how many
+    of them are Heart Containers."""
+    checks = AcceptanceCheck(levels, item_shuffle_result, overworld, caves, rules, granted, extras,
+                             granted_heart_containers)
     if not checks.collects_everything():
         return "E1"
     if not checks.is_zelda_reachable():

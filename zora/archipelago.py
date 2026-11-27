@@ -393,11 +393,6 @@ NOT_OFFERED_VALUES: dict[str, frozenset[int]] = {
     "swordlish": frozenset({Swordlish.ON, Swordlish.RANDOM}),
     SWORDLISH_LOWEST_FIELD: frozenset(range(1, len(SWORDLISH_PIECES))),
     SWORDLISH_HIGHEST_FIELD: frozenset(range(len(SWORDLISH_PIECES) - 1)),
-    # Add Triforces / Maps/Compasses to the Item Pool (ZORA version 23, docs/design/archipelago-items.md piece 6)
-    # are offered On and Off since 2026-11-21: the scan of section 8 built 100 of 100 seeds each alone and together,
-    # 0 unreachable, every per-level code in its own level. Their "?" (piece 7, for single-player) is never offered:
-    # Archipelago's own random covers it, and the recipe carries the resolved value.
-    **dict.fromkeys(zora_flags.LEVEL_ITEM_POOL_FIELDS, frozenset({ThreeState.POSSIBLE})),
 }
 assert not set(HELD_BACK) & set(NOT_OFFERED_VALUES), "a field both held for its scan and kept out"
 # Owner rule (2026-11-23): in Archipelago the magical-sword cave never asks for more than 12 hearts, whatever Randomize
@@ -558,7 +553,8 @@ def _zora_value_keys(field: Mapping[str, Any]) -> dict[int, str]:
     """Every value of a ZORA flag and its key."""
     if field["kind"] == "option":
         return {value["value"]: (ZORA_VALUE_KEY_OVERRIDES.get((field["name"], value["value"]))
-                                 or value_key(value["label"])) for value in field["values"]}
+                                 or value_key(value["label"]))
+                for value in sorted(field["values"], key=lambda value: value["value"])}     # in value order
     states = THREE_STATE_KEYS if field["kind"] == zora_form.THREE_STATE_KIND else dict.fromkeys(SWITCH_STATES)
     return {int(state): THREE_STATE_KEYS[state] for state in states}
 
@@ -597,6 +593,35 @@ def _z1r_spec(field: flag_form.FieldDef, defaults: Settings) -> OptionSpec:
                       _beta_values(field.id, choices, default), clamped)
 
 
+# Triforce Shuffle and Map & Compass Shuffle (ZORA version 23, docs/design/archipelago-items.md pieces 6 and 7) are
+# offered at every value; Archipelago's default is Anywhere (owner, 2026-11-25), a single-player seed's Off. Anywhere
+# is 2.0.2's test release's On, whose scan (section 8) built 100 of 100 seeds each alone and together, 0 unreachable.
+# The page's form names them ("multiworldDefault"), and sets them when switched to Multiworld mode.
+ARCHIPELAGO_ZORA_DEFAULTS = {field["name"]: int(field["multiworldDefault"]) for field in zora_form.FIELDS
+                             if "multiworldDefault" in field}
+# Options renamed after a release offered them (owner, 2026-11-25): 2.0.2's test release's two switches became
+# Triforce Shuffle and Map & Compass Shuffle. A YAML that names an old key still loads, read as the new option with a
+# note: on (or true) is Anywhere, off (or false) is Off.
+RENAMED_OPTIONS = {"add_triforces_to_pool": zora_flags.TRIFORCE_SHUFFLE_FIELD,
+                   "add_maps_compasses_to_pool": zora_flags.MAP_COMPASS_SHUFFLE_FIELD}
+RENAMED_OPTION_VALUES = {**dict.fromkeys(("on", "true"), int(zora_flags.LevelItemShuffle.ANYWHERE)),
+                         **dict.fromkeys(("off", "false"), int(zora_flags.LevelItemShuffle.OFF))}
+
+
+def renamed_option(old_key: str, given: object) -> tuple[str, int | None, str]:
+    """A renamed option's value (RENAMED_OPTIONS): the new key, the value it is read as (None for a value the old
+    option never had) and the note for the player."""
+    new_key = RENAMED_OPTIONS[old_key]
+    word = str(given).strip().lower()
+    value = RENAMED_OPTION_VALUES.get(word)
+    spec = next(spec for spec in option_fields() if spec.key == new_key)
+    if value is None:
+        return new_key, None, (f"{old_key} was renamed {new_key}, and {given!r} is not one of its old values (on, "
+                               f"off); {spec.name} keeps its default")
+    label = dict(spec.choices)[value]
+    return new_key, value, f"{old_key} was renamed {new_key}: {word} is read as {spec.name}: {label}"
+
+
 def _zora_spec(field: Mapping[str, Any], defaults: zora_flags.ZoraFlags) -> OptionSpec:
     name = field["name"]
     clamps = SWORD_HEARTS_CLAMPED.get(name, {})
@@ -611,7 +636,7 @@ def _zora_spec(field: Mapping[str, Any], defaults: zora_flags.ZoraFlags) -> Opti
         kind, choices = SWITCH, tuple((int(state), THREE_STATE_LABELS[state]) for state in SWITCH_STATES
                                       if state not in kept_out)
     default = zora_form.control_value(defaults, name) if hasattr(defaults, name) else choices[0][0]
-    default = clamps.get(default, default)
+    default = ARCHIPELAGO_ZORA_DEFAULTS.get(name, clamps.get(default, default))
     keys = _zora_value_keys(field)
     labels = {value["value"]: value["label"] for value in field.get("values", ())}
     clamped = tuple((value, read, keys[value], labels[value]) for value, read in clamps.items())
@@ -1014,12 +1039,14 @@ class PlaceInfo:
     "cave", "shop ware", "potion shop"), the items it must never hold (by name), the heart
     containers its cave asks for before handing over its item (the sword caves; R2), and whether
     it is a minor place (Place.minor: Shuffle Minor Dungeon Drops' bombs, five rupees or key, a
-    filler spot that the Item Counter never counts)."""
+    filler spot that the Item Counter never counts), and whether it is a compass spot (Place.compass_spot: in
+    per-level mode the room or item cellar a level's compass marks, which takes no world's filler)."""
     name: str
     kind: str
     forbids: tuple[str, ...]
     hearts: int | None
     minor: bool = False
+    compass_spot: bool = False
 
 
 @dataclass(frozen=True)
@@ -1039,7 +1066,7 @@ class BuildResult:
 def place_info(place: Place, names: Mapping[Item, str] = ITEM_NAMES) -> PlaceInfo:
     hearts = next((required.hearts for required in place.requires), None)
     return PlaceInfo(place.name, place.kind.value, tuple(sorted(names[item] for item in place.forbids)), hearts,
-                     place.minor)
+                     place.minor, place.compass_spot)
 
 
 def seed_item_names(world: GameWorld) -> dict[Item, str]:

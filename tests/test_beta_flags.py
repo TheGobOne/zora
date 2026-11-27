@@ -59,17 +59,17 @@ def test_the_shipped_file_marks_universal_drops_v2_and_loads() -> None:
         "universal_drops_v2": {beta.BETA_KEY: beta.ALL_VALUES}, "B51": {beta.BETA_KEY: ["Basic", "Medium", "Full"]},
         "wizzrobes_shoot_wallmasters": {beta.BETA_KEY: beta.ALL_VALUES},
         "item_counter": {beta.BETA_KEY: beta.ALL_VALUES},
-        "add_triforces_to_pool": {beta.BETA_KEY: beta.ALL_VALUES}, "add_maps_compasses_to_pool": {beta.BETA_KEY: beta.ALL_VALUES}, "bomb_upgrades_in_pool": {beta.BETA_KEY: beta.ALL_VALUES}, "show_item_pickups": {beta.BETA_KEY: beta.ALL_VALUES}}
+        "triforce_shuffle": {beta.BETA_KEY: beta.ALL_VALUES}, "map_compass_shuffle": {beta.BETA_KEY: beta.ALL_VALUES}, "bomb_upgrades_in_pool": {beta.BETA_KEY: beta.ALL_VALUES}, "show_item_pickups": {beta.BETA_KEY: beta.ALL_VALUES}}
     # Spoiler Log Detail Level (owner rulings, 2026-11-06, and Prompt 660): every level but None, and Random
     levels = {1, flag_form.SPOILER_MEDIUM_CHOICE, flag_form.SPOILER_FULL_CHOICE, 2}
     assert flag_form.beta_values() == {"universal_drops_v2": frozenset({1, 2}), "B51": frozenset(levels),
                                        "wizzrobes_shoot_wallmasters": frozenset({1, 2}),
                                        "item_counter": frozenset({1, 2}),
-                                       "add_triforces_to_pool": frozenset({1, 2}), "add_maps_compasses_to_pool": frozenset({1, 2}), "bomb_upgrades_in_pool": frozenset({1}),
+                                       "triforce_shuffle": frozenset({1, 2}), "map_compass_shuffle": frozenset({1, 2}), "bomb_upgrades_in_pool": frozenset({1}),
                                        "show_item_pickups": frozenset({1, 2})}
     assert flag_form.metadata()["beta"]["values"] == {"universal_drops_v2": [1, 2], "B51": sorted(levels),
                                                       "wizzrobes_shoot_wallmasters": [1, 2],
-                                                      "item_counter": [1, 2], "add_triforces_to_pool": [1, 2], "add_maps_compasses_to_pool": [1, 2], "bomb_upgrades_in_pool": [1], "show_item_pickups": [1, 2]}
+                                                      "item_counter": [1, 2], "triforce_shuffle": [1, 2], "map_compass_shuffle": [1, 2], "bomb_upgrades_in_pool": [1], "show_item_pickups": [1, 2]}
     assert flag_form.form_state(START)["beta"] == []
 
 
