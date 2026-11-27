@@ -6,9 +6,6 @@ docs/archipelago.md "Interface"), Archipelago Phase 4a tests 4 and 5:
      this process, in a fresh one, and under Python 3.11 and 3.13;
   5. the pin: one changed byte in a copied zora/ changes the source hash, and that copy refuses
      the recipe naming both; the hash is the same from the repo, a copied folder and a zip."""
-import pytest
-pytest.skip("stale: fails on Tetra's 2.0.2 build (renamed names and changed values); rewrite against 2.0.2 or mark the failing IDs", allow_module_level=True)
-
 import hashlib
 import json
 import random

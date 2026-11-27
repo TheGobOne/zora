@@ -120,6 +120,21 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     for item in items:
         if _later_swept_seed(item):
             item.add_marker(FULL_TIER)
+    _mark_stale_failures(items)
+
+
+STALE_FAILURES = Path(__file__).with_name("stale_2_0_2_failures.txt")
+
+
+def _mark_stale_failures(items: list[pytest.Item]) -> None:
+    """Mark the node IDs listed in stale_2_0_2_failures.txt xfail (non-strict): they fail on 2.0.2."""
+    if not STALE_FAILURES.exists():
+        return
+    listed = {line.strip() for line in STALE_FAILURES.read_text(encoding="utf-8").splitlines()
+              if line.strip() and not line.startswith("#")}
+    for item in items:
+        if item.nodeid in listed:
+            item.add_marker(pytest.mark.xfail(strict=False, reason="fails on Tetra's 2.0.2 build; see stale_2_0_2_failures.txt"))
 
 
 def _later_swept_seed(item: pytest.Item) -> bool:
@@ -169,3 +184,4 @@ def pytest_runtest_protocol(item: pytest.Item) -> Generator[None, object, object
         return (yield)
     finally:
         _shared_builds.begin_test(False)
+

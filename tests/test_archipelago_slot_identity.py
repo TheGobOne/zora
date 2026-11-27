@@ -6,9 +6,6 @@ docs/archipelago.md "Interface", docs/rom-map.md "Archipelago slot identity").
     an External-mode ROM without a name; a name the record cannot hold is refused;
   - the recipe carries apName, and its round trip still gives the same ROM byte for byte.
 Its range is clear of z1rr-coop's blocks and the level encoding's sites: test_coop_reserved.py."""
-import pytest
-pytest.skip("stale: fails on Tetra's 2.0.2 build (renamed names and changed values); rewrite against 2.0.2 or mark the failing IDs", allow_module_level=True)
-
 import json
 from functools import cache
 

@@ -7,9 +7,6 @@ with the recompute of item-dependent outputs off:
      the seed code, the one-time wares and (when it turns on) the $0E remap;
   9. the exclusions and restrictions (R2) hold.
 """
-import pytest
-pytest.skip("stale: fails on Tetra's 2.0.2 build (renamed names and changed values); rewrite against 2.0.2 or mark the failing IDs", allow_module_level=True)
-
 import random
 from functools import cache, partial
 

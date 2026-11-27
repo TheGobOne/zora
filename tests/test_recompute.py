@@ -8,9 +8,6 @@ Archipelago Phase 2 tests 3 (with the recompute on), 7 and 8.
      and outputs on the R3 list.
 Also: with BUILD's own draws, the hint text FINISH composes for the identity assignment is
 exactly BUILD's (so nothing a later BUILD step writes leaks into the recomposed text)."""
-import pytest
-pytest.skip("stale: fails on Tetra's 2.0.2 build (renamed names and changed values); rewrite against 2.0.2 or mark the failing IDs", allow_module_level=True)
-
 import copy
 import subprocess
 import sys

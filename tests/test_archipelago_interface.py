@@ -5,9 +5,6 @@ Phase 4a test 3 and finish():
   - finish() by names makes the ROM pipeline.finish makes with the same items, passes another
     player's item through, and refuses a name that is no item and a ROM that is not PRG0."""
 import pytest
-pytest.skip("stale: fails on Tetra's 2.0.2 build (renamed names and changed values); rewrite against 2.0.2 or mark the failing IDs", allow_module_level=True)
-
-import pytest
 
 from tests.archipelago_cases import FLAG_CASES
 from tests.test_assignment import identity
