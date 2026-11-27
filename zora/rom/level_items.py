@@ -17,6 +17,10 @@ SELLER_MODE = 0x1FD93                   # bank 7 $FD83: ApItemsSellerMode, the b
 SELLER_ON = 0x01
 BOMB_UPGRADE_COUNT = 0x1FD94            # bank 7 $FD84: ApItemsBombUpgradeCount, the block's third byte
 SEED_DATA = 0x19D80                     # bank 6 $9D70: the far segment's start (asm/placements.toml)
+# bank 6 $AD80: asm/flags2/level-compass's segment start (asm/placements.toml), LevelCompassRooms: for each data
+# level 1-8 the room whose item-taken flag its compass marker follows
+COMPASS_ROOMS = 0x1AD90
+MARKED_LEVELS = 8                       # level 9's marker is the game's
 LEVELS = 9
 DIGITS = range(1, 10)
 GLYPH_ROWS = 8
@@ -37,6 +41,14 @@ def per_level_writes(shown: Sequence[int], rom: bytes | bytearray) -> Writes:
         raise ValueError(f"per-level mode needs nine level numbers 1-9, not {tuple(shown)}")
     glyphs = b"".join(digit_glyph(rom, digit) for digit in DIGITS)
     return [(PER_LEVEL_MODE, bytes([PER_LEVEL_ON])), (SEED_DATA, bytes(shown) + glyphs)]
+
+
+def compass_room_writes(rooms: Sequence[int]) -> Writes:
+    """Per-level mode's compass marker (asm/flags2/level-compass): for each data level 1-8, the room whose item it
+    blinks until taken, the marked room or the item cellar under it (finish.compass_item_rooms)."""
+    if len(rooms) != MARKED_LEVELS or not all(0 <= room < 0x80 for room in rooms):
+        raise ValueError(f"the compass marker needs eight rooms $00-$7F, not {tuple(rooms)}")
+    return [(COMPASS_ROOMS, bytes(rooms))]
 
 
 def bomb_upgrade_writes(rom: bytes | bytearray, sellers: bool) -> Writes:

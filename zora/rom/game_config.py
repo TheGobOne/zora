@@ -167,6 +167,10 @@ class GameConfig:
     # ROM only; zora/rom/level_items.py): each level's piece, map and compass is taken as its own and shows
     # its level's number. The number the status bar shows for data levels 1-9; empty when off.
     per_level_shown: tuple[int, ...] = field(default=(), metadata=OMITTED_AT_DEFAULT)
+    # Per-level mode's compass marker (asm/flags2/level-compass): for data levels 1-8, the room whose item the
+    # marker blinks until taken, its marked room or the item cellar under it (finish.compass_item_rooms); empty
+    # when per-level mode is off.
+    per_level_compass_rooms: tuple[int, ...] = field(default=(), metadata=OMITTED_AT_DEFAULT)
     # Bomb Upgrades in the Item Pool (an Archipelago game's ROM only; docs/design/archipelago-items.md piece 8,
     # zora/rom/level_items.py): the two bomb upgraders' rooms are places whose item each shows and sells.
     bomb_upgrade_sellers: bool = field(default=False, metadata=OMITTED_AT_DEFAULT)

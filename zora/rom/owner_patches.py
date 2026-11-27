@@ -66,13 +66,18 @@ RETIRED_PATCHES = frozenset({"l4-sword-take"})
 # item messages.
 ARCHIPELAGO_PATCHES = ("ring-color", "ap-items", "hud-white-text")
 AP_ITEMS_PATCH = "ap-items"
+# asm/flags2's patches only a ROM in per-level mode gets (GameConfig.per_level_shown; Add Triforces or Add
+# Maps/Compasses to the Item Pool, in Archipelago and single-player ROMs alike): level-compass, the compass marker
+# blinking until its marked room's item is taken (docs/design/archipelago-items.md piece 6). Every other ROM keeps
+# the game's marker, byte for byte.
+PER_LEVEL_PATCHES = ("level-compass",)
 # asm/flags2's patches a setting with levels writes, not a flag that is on or off: Harder Ganon's
 # (zora/rom/harder_bosses.py sets its level byte).
 LEVEL_PATCHES = ("harder-ganon",)
 # Every built patch belongs to a flag or is retired; a flag's patch not built yet keeps that flag
 # unproduced (zora_flags.PRODUCED_OWNER_FIELDS; tests/test_owner_flags_wired.py).
 assert set(PATCHES) <= {name for names in PATCHES_BY_FLAG.values() for name in names} | RETIRED_PATCHES \
-    | set(ALWAYS_WRITTEN) | set(ARCHIPELAGO_PATCHES) | set(LEVEL_PATCHES)
+    | set(ALWAYS_WRITTEN) | set(ARCHIPELAGO_PATCHES) | set(LEVEL_PATCHES) | set(PER_LEVEL_PATCHES)
 PATCH_CREDITS = CREDITS
 
 # ASNB's patches by the setting that writes them: Add L4 Sword on (either place), and GameConfig's
@@ -89,13 +94,16 @@ SWORD_LINE_TO_L4 = 0x01
 
 
 def owner_patch_writes(flags: Iterable[str], level_9_entrance_sword: bool = False,
-                       archipelago_rom: bool = False, ap_items: bool | None = None) -> list[tuple[int, bytes]]:
+                       archipelago_rom: bool = False, ap_items: bool | None = None,
+                       per_level: bool = False) -> list[tuple[int, bytes]]:
     """The writes of ALWAYS_WRITTEN's patches and of every patch the named (resolved-on) flags turn
     on, with Level 9 Entrance = Level 4 sword level-9-gate, and in an Archipelago game's ROM
     ARCHIPELAGO_PATCHES, as (file offset, bytes); sword-cap with its switch on. `ap_items` (default:
-    archipelago_rom) writes AP_ITEMS_PATCH, as a single-player ROM in per-level mode has it."""
+    archipelago_rom) writes AP_ITEMS_PATCH, as a single-player ROM in per-level mode has it; `per_level` writes
+    PER_LEVEL_PATCHES."""
     ap_items = archipelago_rom if ap_items is None else ap_items
-    always = (*ALWAYS_WRITTEN, *(ARCHIPELAGO_PATCHES if archipelago_rom else (AP_ITEMS_PATCH,) if ap_items else ()))
+    always = (*ALWAYS_WRITTEN, *(ARCHIPELAGO_PATCHES if archipelago_rom else (AP_ITEMS_PATCH,) if ap_items else ()),
+              *(PER_LEVEL_PATCHES if per_level else ()))
     writes: list[tuple[int, bytes]] = [(offset, piece_bytes(piece)) for name in always
                                        for offset, piece in PATCHES[name]]
     flags = (*flags, *((LEVEL_9_ENTRANCE,) if level_9_entrance_sword else ()))

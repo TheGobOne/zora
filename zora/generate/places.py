@@ -37,7 +37,7 @@ Phase 3 calls on the built world; each place names where that walk finds it (`le
 from __future__ import annotations
 
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 
 from ..model.enums import Destination, Enemy, Item, RoomType
@@ -77,7 +77,10 @@ class Place:
     places name `destination`, `position` (a shop ware's index) and `screens`, the overworld
     screens whose entrance leads there (the Armos item: the formation's screen; the coast: none,
     the game gives it at a fixed spot). `minor`: a dungeon place BUILD left holding one of
-    Shuffle Minor Dungeon Drops' items (B17), whatever Archipelago puts there."""
+    Shuffle Minor Dungeon Drops' items (B17), whatever Archipelago puts there. `compass_spot`: in per-level mode,
+    the spot a level's compass marker follows (the piece's original room or item cellar; finish.compass_item_rooms),
+    which never holds filler: Bombs, 5 Rupees or a Key (COMPASS_SPOT_FORBIDS), or in Archipelago any world's
+    filler (owner, 2026-11-25)."""
     kind: PlaceKind
     name: str
     level: int | None = None
@@ -89,6 +92,7 @@ class Place:
     forbids: frozenset[Item] = frozenset()
     requires: tuple[HeartsRequired, ...] = ()
     minor: bool = False
+    compass_spot: bool = False
 
     @property
     def is_dungeon(self) -> bool:
@@ -188,6 +192,9 @@ def own_item(place: Place, item: Item, extras: ExtraOptions) -> Item:
 # With ZORA's remap on, $0E reads as "no item" in a dungeon room or cellar; it only belongs in
 # Ganon's room, which is never a place.
 DUNGEON_FORBIDS = frozenset({Item.TRIFORCE_OF_POWER})
+# A per-level compass spot (Place.compass_spot) never holds filler: B17's minor items, the items Archipelago
+# classes as this world's filler (archipelago/classes.py FILLER_ITEMS)
+COMPASS_SPOT_FORBIDS = DUNGEON_FORBIDS | MINOR_ITEMS
 # A joined shop ware may sell any pool item, heart containers included: ZORA's own seeds do, and
 # SI-PRICE-01 prices them (20-40). The spec's "no heart containers in shops" is not applied, since
 # it would refuse ZORA's own placement (docs/archipelago.md, "Restrictions").
@@ -400,7 +407,19 @@ def all_item_places(world: GameWorld, extras: ExtraOptions) -> list[Place]:
     caves = [_cave_place(world, destination, extras) for destination in _cave_destinations(extras)]
     overworld = sorted(caves + _ware_places(world, extras, pool),
                        key=lambda place: (place.destination, place.position or 0))
-    return _dungeon_places(world, item_pool(extras)) + overworld
+    return _with_compass_spots(world, extras, _dungeon_places(world, item_pool(extras))) + overworld
+
+
+def _with_compass_spots(world: GameWorld, extras: ExtraOptions, places: list[Place]) -> list[Place]:
+    """Per-level mode: each level's compass spot (finish.compass_item_rooms: the room its compass marks, or the
+    item cellar under it where the piece stood), when it is a place, marked and forbidden filler, so the room
+    the compass points at always holds a real item (owner, 2026-11-25)."""
+    if not extras.per_level_items:
+        return places
+    from .finish import MARKED_LEVELS, compass_item_rooms
+    spots = set(zip(MARKED_LEVELS, compass_item_rooms(world), strict=True))
+    return [replace(place, compass_spot=True, forbids=place.forbids | COMPASS_SPOT_FORBIDS)
+            if (place.level, place.room_num) in spots else place for place in places]
 
 
 # --- reading and writing ---------------------------------------------------------------------
