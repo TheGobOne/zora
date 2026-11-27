@@ -159,14 +159,13 @@ class ZoraClient(BizHawkClient):
     HUD_TINY_NAMES = hud_names.HUD_TINY_NAMES
     # never the last word of a cut name
     HUD_DANGLING: ClassVar[set[str]] = {"OF", "THE", "A", "AN", "AND", "TO", "FOR"}
-    # Queue order by kind: sent lines, new items, then a burst of re-given items
-    # (its "N ITEMS GIVEN BACK" line, then each item).
-    HUD_ORDER: ClassVar[dict[str, int]] = {"sent": 0, "got": 1, "back": 2, "regot": 3}
+    # Queue order by kind: sent lines, new items, then re-given items.
+    HUD_ORDER: ClassVar[dict[str, int]] = {"sent": 0, "got": 1, "regot": 2}
     HUD_ROW = 0x2022
     HUD_WIDTH = 28
-    HUD_SECONDS = 10.0
-    HUD_SECONDS_BUSY = 5.0      # each message's time while HUD_BUSY_AT or more are pending
-    HUD_BUSY_AT = 4             # pending messages, the one going up included: 3 or fewer get 10 s, more get 5 s
+    HUD_SECONDS = 5.0
+    HUD_SECONDS_BUSY = 3.0      # each message's time while HUD_BUSY_AT or more are pending
+    HUD_BUSY_AT = 4             # pending messages, the one going up included: 3 or fewer get 5 s, more get 3 s
     HUD_REDRAW = 1.0            # written again this often while shown, in case a screen change wiped it
     # A blank is written this many times, HUD_REDRAW apart. No lost write was seen in FCEUX
     # (2026-11-23); the extra blanks are cheap insurance against a screen change redrawing the row.
@@ -193,27 +192,19 @@ class ZoraClient(BizHawkClient):
     def hud_got(self, ctx: BizHawkClientContext, item: Any, count: int) -> None:
         """Queue the line for received item number `count` as it is given. An item already announced
         for this seed and slot (given again after a switch from the battery save, or in a new save
-        file) starts a burst: one "N ITEMS GIVEN BACK" line counting every item given again, then
-        each item's own line. New items' lines go ahead of the burst."""
+        file) gets its own line too, after any new items' lines."""
         try:
             # Archipelago keeps the server's seed name in server_seed_name and leaves seed_name None;
             # with no seed name at all, no item counts as given again (one count shared by every
-            # seed would turn a new seed's first items into a burst)
+            # seed would mark a new seed's first items as given again)
             seed = getattr(ctx, "server_seed_name", None) or getattr(ctx, "seed_name", None)
             key = f"{seed}:{ctx.slot}"
             seen = self.hud_seen_load().get(key, 0) if seed else 0
             seen = min(seen, len(getattr(ctx, "items_received", ())) or seen)
             regiven = count <= seen
-            if regiven:
-                if not self.hud_burst:          # the whole burst is known now: items count..seen
-                    self.hud_burst = True
-                    n = seen - count + 1
-                    self.hud_add(f"{n} ITEM GIVEN BACK" if n == 1 else f"{n} ITEMS GIVEN BACK", "back")
-            else:
-                self.hud_burst = False
-                if seed:
-                    self.hud_seen[key] = count
-                    self.hud_seen_save()
+            if not regiven and seed:
+                self.hud_seen[key] = count
+                self.hud_seen_save()
             if item.location == -2:         # starting inventory: not news
                 return
             name = self.hud_item
@@ -278,7 +269,6 @@ class ZoraClient(BizHawkClient):
 
     def hud_reset(self) -> None:
         self.hud_messages: list = []        # (text, kind): kind is a key of HUD_ORDER
-        self.hud_burst = False              # items given again are being given; their line is queued
         self.hud_text: str | None = None    # the message on screen now, or None
         self.hud_kind = ""                  # the kind of hud_text
         self.hud_until = 0.0

@@ -258,17 +258,18 @@ class TestHudMessages(unittest.TestCase):
         self.got(4, SLOT, 1)
         self.assertEqual(self.texts(), ["GOT ITEM"])
 
-    def test_items_given_again_get_one_burst_line_even_after_a_restart(self) -> None:
+    def test_items_given_again_show_right_away_after_new_ones_even_after_a_restart(self) -> None:
         for count in (1, 2, 3):
             self.got(3, SLOT, count)
         self.client = client_module.ZoraClient()       # a switch restarts the client
         self.ctx.items_received = []
         for count in (1, 2, 3, 4):
             self.got(3, SLOT, count)
-        # the new item (4) goes ahead of the burst
-        self.assertEqual(self.texts(), ["GOT RAFT", "3 ITEMS GIVEN BACK", "GOT RAFT", "GOT RAFT", "GOT RAFT"])
+        # no count line: the new item (4) goes ahead, then each item given again
+        self.assertEqual(self.texts(), ["GOT RAFT"] * 4)
+        self.assertEqual([kind for _text, kind in self.client.hud_messages], ["got", "regot", "regot", "regot"])
 
-    def test_the_burst_line_comes_first_then_each_item_of_the_burst(self) -> None:
+    def test_new_items_go_ahead_of_items_given_again(self) -> None:
         for count in (1, 2):
             self.got(1, SLOT, count)
         self.client = client_module.ZoraClient()       # a switch restarts the client
@@ -276,18 +277,7 @@ class TestHudMessages(unittest.TestCase):
         self.got(1, SLOT, 1)                           # given again
         self.got(1, 2, 2)                              # given again, from another player
         self.got(3, SLOT, 3)                           # new
-        self.assertEqual(self.texts(), ["GOT RAFT", "2 ITEMS GIVEN BACK", "GOT HEART CONTAINER",
-                                        "HEART CONTAINER FROM Z2R"])
-
-    def test_one_burst_line_with_the_full_count_when_lines_show_between_gives(self) -> None:
-        for count in (1, 2, 3):
-            self.got(3, SLOT, count)
-        self.client = client_module.ZoraClient()
-        shown = []
-        for count in (1, 2, 3):                        # hud_tick shows the first line after each give
-            self.got(3, SLOT, count)
-            shown.append(self.client.hud_messages.pop(0)[0])
-        self.assertEqual(shown + self.texts(), ["3 ITEMS GIVEN BACK", "GOT RAFT", "GOT RAFT", "GOT RAFT"])
+        self.assertEqual(self.texts(), ["GOT RAFT", "GOT HEART CONTAINER", "HEART CONTAINER FROM Z2R"])
 
     def test_a_new_seed_does_not_count_items_of_an_old_one(self) -> None:
         self.ctx.seed_name = None                      # as Archipelago leaves it
@@ -304,24 +294,6 @@ class TestHudMessages(unittest.TestCase):
         self.got(3, SLOT, 1)
         self.got(3, SLOT, 1)
         self.assertEqual(self.texts(), ["GOT RAFT", "GOT RAFT"])
-
-    def test_a_burst_counts_no_more_items_than_the_server_sent(self) -> None:
-        for count in (1, 2, 3, 4, 5):
-            self.got(3, SLOT, count)
-        self.client.hud_messages.clear()
-        self.ctx.items_received = [NetworkItem(3, 5, SLOT)] * 2
-        self.got(3, SLOT, 1)
-        self.assertEqual(self.texts()[0], "2 ITEMS GIVEN BACK")
-
-    def test_a_later_burst_counts_from_its_own_first_item(self) -> None:
-        for count in (1, 2, 3):
-            self.got(3, SLOT, count)
-        self.client = client_module.ZoraClient()
-        self.got(3, SLOT, 3)                           # one item given again
-        self.got(3, SLOT, 4)                           # then a new one ends the burst
-        self.client.hud_messages.clear()
-        self.got(3, SLOT, 4)                           # a new file: item 4 given again
-        self.assertEqual(self.texts()[0], "1 ITEM GIVEN BACK")
 
     def test_a_sent_line_goes_ahead_of_received_lines_that_wait(self) -> None:
         self.got(3, 2, 1)
@@ -546,23 +518,23 @@ class TestHudTiming(unittest.TestCase):
     def queue(self, *texts: str) -> None:
         self.client.hud_queue().extend((text, "got") for text in texts)
 
-    def test_a_line_shows_10_s_then_the_row_is_blanked(self) -> None:
+    def test_a_line_shows_5_s_then_the_row_is_blanked(self) -> None:
         self.queue("GOT RAFT")
         self.tick_at(0)
         self.assertEqual((self.client.hud_text, self.console.writes), ("GOT RAFT", 1))
-        self.tick_at(9.9)
+        self.tick_at(4.9)
         self.assertEqual(self.client.hud_text, "GOT RAFT")
         writes = self.console.writes
-        self.tick_at(10)
+        self.tick_at(5)
         self.assertIsNone(self.client.hud_text)
         self.assertEqual(self.console.writes, writes + 1)       # the first blank goes at once
-        self.tick_at(10.5)
+        self.tick_at(5.5)
         self.assertEqual(self.console.writes, writes + 1)
-        self.tick_at(11)
-        self.tick_at(12)                                        # a blank can be lost: written 3 times
+        self.tick_at(6)
+        self.tick_at(7)                                        # a blank can be lost: written 3 times
         self.assertEqual(self.console.writes, writes + 3)
         self.assertFalse(self.client.hud_dirty)
-        self.tick_at(13)                                        # then nothing more
+        self.tick_at(8)                                        # then nothing more
         self.assertEqual(self.console.writes, writes + 3)
 
     def test_a_shown_line_is_redrawn_each_second(self) -> None:
@@ -591,45 +563,45 @@ class TestHudTiming(unittest.TestCase):
         self.queue("GOT RAFT")
         self.tick_at(0)
         self.console.ram[0x12] = 0x07
-        self.tick_at(10)
+        self.tick_at(5)
         self.assertIsNone(self.client.hud_text)
         self.assertTrue(self.client.hud_dirty)              # the text is still on screen
         self.console.ram[0x12] = 5
-        self.tick_at(10.1)
+        self.tick_at(5.1)
         self.assertEqual(self.console.writes, 2)
-        self.tick_at(11.1)
-        self.tick_at(12.1)
+        self.tick_at(6.1)
+        self.tick_at(7.1)
         self.assertFalse(self.client.hud_dirty)
         self.assertEqual(self.console.writes, 4)
 
     def test_lines_follow_each_other_without_a_blank_between(self) -> None:
         self.queue("GOT RAFT", "GOT BOW")
         self.tick_at(0)
-        self.tick_at(10)
+        self.tick_at(5)
         self.assertEqual(self.client.hud_text, "GOT BOW")
         self.assertTrue(self.client.hud_dirty)
 
-    def test_a_busy_queue_gives_each_line_5_s(self) -> None:
+    def test_a_busy_queue_gives_each_line_3_s(self) -> None:
         self.queue("A", "B", "C", "D")
         self.tick_at(0)
-        self.assertEqual(self.client.hud_until, 105.0)
+        self.assertEqual(self.client.hud_until, 103.0)
         self.client.hud_queue().clear()
         self.queue("E", "F", "G")
-        self.tick_at(5)
-        self.assertEqual(self.client.hud_until, 115.0)      # 3 pending: 10 s again
+        self.tick_at(3)
+        self.assertEqual(self.client.hud_until, 108.0)      # 3 pending: 5 s again
 
-    def test_a_line_up_when_the_queue_gets_busy_keeps_only_5_s(self) -> None:
+    def test_a_line_up_when_the_queue_gets_busy_keeps_only_3_s(self) -> None:
         self.queue("A")
         self.tick_at(0)
-        self.assertEqual(self.client.hud_until, 110.0)
+        self.assertEqual(self.client.hud_until, 105.0)
         self.queue("B", "C", "D")
         self.tick_at(1)
-        self.assertEqual(self.client.hud_until, 105.0)
+        self.assertEqual(self.client.hud_until, 103.0)
 
-    def test_items_given_again_get_5_s_each(self) -> None:
+    def test_items_given_again_get_3_s_each(self) -> None:
         self.client.hud_queue().append(("GOT RAFT", "regot"))
         self.tick_at(0)
-        self.assertEqual(self.client.hud_until, 105.0)
+        self.assertEqual(self.client.hud_until, 103.0)
 
     def test_a_refused_write_keeps_the_line(self) -> None:
         self.queue("GOT RAFT")
