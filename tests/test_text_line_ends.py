@@ -20,7 +20,7 @@ on each encoder with such lines; and (slow) on finished ROMs of every Archipelag
 (tests/archipelago_cases.py, 94 varied settings), and on Archipelago's FINISH texts with another
 player's item in every cave place."""
 import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
+pytest.skip("stale: imports test_foreign_hints, skipped for its 2.0.2 renames", allow_module_level=True)
 
 import itertools
 from functools import cache

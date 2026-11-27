@@ -9,9 +9,6 @@ it is long enough) by a two-line text whose first line ends on a character the f
 person room of levels 1-8 draws inside the box's 24 columns, the columns either side as in the
 finished ROM; without closed_line some room's text runs past them."""
 import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
-import pytest
 
 import zora.rom.serialize.text as quote_text
 from tests.needs import needs_base_rom

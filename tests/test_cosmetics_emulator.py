@@ -6,9 +6,6 @@ on finished ROMs (CP-5, a seed number on the title screen for Random to draw fro
 - Random tunic and heart colors (FP-SET-02, FP-SET-03) reach the loaded palette as drawn;
 - a Random level word (FP-LEVEL-01) is the status bar's label in level 1;
 - a Random low-health beep (FP-BEEP-01) beeps exactly when it resolved to kept."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from functools import cache
 
 import numpy as np

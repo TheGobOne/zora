@@ -5,9 +5,6 @@ whose trigger opens on all dead opens its shutters; and no extra boss roars (the
 
 The rooms are those of levels 1 to 8 that hold a boss but no heart container and whose doors include a
 shutter, in a level with more bosses than its own (extra bosses, then, not the level's boss)."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from functools import cache
 
 import pytest

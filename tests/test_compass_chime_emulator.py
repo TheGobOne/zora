@@ -9,9 +9,6 @@ the monsters are stopped by the clock.
 The chime played when Tune1 holds its request ($06), TunePtr1 reaches the last note (offset 14) and
 Tune1 then returns to 0, having started exactly once. The cases are numbered as in the feature's
 plan; case 19, Music: Random, is checked separately with lozft."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cache

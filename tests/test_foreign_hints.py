@@ -6,7 +6,7 @@ text naming its item), the coast (the ladder requirement), the magical-sword cav
 and the silver arrows' place (the level-9 trio's silver-arrow or arrow-upgrade text). ZORA mode's
 names are unaffected (verify.sh, the 32-ROM matrix)."""
 import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
+pytest.skip("stale: needs 2.0.2's names (FOREIGN_ITEM as one code, ItemNames.foreign_code); rewrite against FOREIGN_ITEMS and foreign_codes", allow_module_level=True)
 
 from dataclasses import replace
 

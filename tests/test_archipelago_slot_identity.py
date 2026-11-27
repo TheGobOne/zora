@@ -7,7 +7,7 @@ docs/archipelago.md "Interface", docs/rom-map.md "Archipelago slot identity").
   - the recipe carries apName, and its round trip still gives the same ROM byte for byte.
 Its range is clear of z1rr-coop's blocks and the level encoding's sites: test_coop_reserved.py."""
 import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
+pytest.skip("stale: fails on Tetra's 2.0.2 build (renamed names and changed values); rewrite against 2.0.2 or mark the failing IDs", allow_module_level=True)
 
 import json
 from functools import cache

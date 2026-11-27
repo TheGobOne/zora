@@ -16,9 +16,6 @@ that differs is a room's inner palette, the one thing the flag changes.
     once it lands, only the inner area differs; down the stairs it opened and back up, the room
     shows the same colors (the stairway's exit draws it).
 Walls, the status bar, Link and the monsters never differ."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from functools import cache
 
 import numpy as np

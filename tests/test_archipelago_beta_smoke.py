@@ -9,9 +9,6 @@ switched on with seeded random RAM and save RAM, registers a new file, takes one
 floor item, Link put in its room by the level-load and enter-room modes), receives one heart
 container from the server, saves, is reset and continues the file. Exactly one check is sent, one
 item is given, and nothing is given or sent twice."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 import random
 from functools import cache
 

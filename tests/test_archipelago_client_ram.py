@@ -13,9 +13,6 @@ bought bits at $0677-$0679 and fp-hot-01's $067A beside it):
     before Link reaches her and through a death there; true from the frame Link reaches her
     (Zelda's object leaves state 0) and through the ending (mode $13); false again on the title
     and file-select screens after a reset."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 import re
 from collections.abc import Callable
 from functools import cache

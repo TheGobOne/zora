@@ -1,6 +1,6 @@
 """Owner-named hints for other players' items (owner approval 2026-11-18)."""
 import pytest
-pytest.skip("stale: uses a name Tetra's 2.0.2 build renamed or removed (ItemNames.foreign_code, FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
+pytest.skip("stale: builds ItemNames with foreign_code, which Tetra's 2.0.2 build renamed foreign_codes", allow_module_level=True)
 
 import unittest
 from types import SimpleNamespace

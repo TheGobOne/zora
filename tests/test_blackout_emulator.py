@@ -6,9 +6,6 @@ rooms, shows the room dark instead. Ganon's room stays dark (its item byte $8E, 
 A room is dark when nearly all of its inner area is drawn black (the dark palette: only Link shows),
 and lit when at most half is; the status bar and the walls are not looked at. A screenshot of each room is saved
 to temp/emulator/blackout/ for a look."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from functools import cache
 from pathlib import Path
 

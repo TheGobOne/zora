@@ -9,9 +9,6 @@
   6. the same build gives the same model, and a JSON round trip gives an equal model;
   7. logic_model takes under 2 seconds on the slowest case.
 """
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 import json
 import time
 from functools import cache

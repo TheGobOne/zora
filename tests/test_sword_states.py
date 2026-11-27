@@ -4,9 +4,6 @@ Normal; the walk's rules; the cave wares and code bytes per state; the hints' bo
 in the emulator: item $02 as a bomb upgrade (both store layouts, docs/deviations.md), the Book still
 mapping with its routine extended, the Triforce of Power still triggering the ending (FP-FIX-04),
 and the wand-only Ganon fight. Muffle Rug (C07 = Random) generates."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 import dataclasses
 from functools import cache
 from typing import Any

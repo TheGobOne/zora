@@ -9,9 +9,6 @@ padding now closes with a space, whose bits the drawer reads.
 Seed 6 of the MVP baseline with the word KEEP: every person room of
 levels 1-8 draws its text inside the box's 24 columns, the columns either side as with the
 default word; with the old end padding (pad tiles only) at least one does not."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from functools import cache
 
 import pytest

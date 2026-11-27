@@ -10,9 +10,6 @@ $78, and the title story's last scene Link holding up the triforce ($78, from it
 
 Beside them, what Link's colors 2 and 3 also color (a set's own colors change them): the same scenes
 on two ROMs differing only in those two colors, and every object whose pixels differ, Link aside."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from functools import cache
 
 import numpy as np

@@ -9,9 +9,6 @@ docs/archipelago.md "Interface"), Archipelago Phase 4a test 6 and the owner's ad
     (the sword's level 4 with Add L4 Sword), the letter, the magical key, the raft, the recorder,
     heart containers (and their cap), the blue potion (and its cap) and arrows without a bow;
   - the inventory tables are PRG0's own bytes."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from functools import cache
 
 import pytest

@@ -13,9 +13,6 @@ to the other through the file-select screen. In every run:
     the received count are the loaded file's;
   - may_receive implies checks_readable and play, so the received count is never acted on outside
     play (nor read from another file); goal_reached is never true."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 import random
 from collections.abc import Callable
 from dataclasses import dataclass

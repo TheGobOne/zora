@@ -15,7 +15,7 @@ ITEM_CODES = $24
 
 ItemLineLatch := $F0                ; TakeItem's last item code, $FF once shown (bombs are code 0)
 ItemLineTimer := $F1                ; every other frame one less while the line shows; at 0 the row is blanked
-ItemLineAttrReq := $F2              ; bit 0 after a line is written: the next NMI makes the top row palette 0 (white);
+ItemLineAttrReq := $F2             ; bit 0 after a line is written: the next NMI makes the top row palette 0 (white);
                                     ; bit 7 (ARMED) once ItemLine has run, so ClearRam's 0 in the latch is not bombs
 ARMED = $80
 NO_ITEM = $FF
@@ -101,13 +101,16 @@ ItemLineWrite:                      ; ItemLineLevel comes in here with Text at i
     BNE :-
     LDA #ARMED|1
     STA ItemLineAttrReq             ; the NMI makes the top row's colours white
+    ; The record is 28 tiles, so Tetra's NMI skips its 480-cycle glyph upload (under 25 bytes).
+    ; Under 20 tiles, ItemLineAttr's 503 cycles plus that upload would overrun vblank.
     BNE ItemLineWritten
 
 ItemLineTick:
     LDA ItemLineTimer
     BEQ ItemLineBack
     LDA Paused
-    BNE ItemLineBack                       ; the line waits while the game is paused
+    ORA MenuState                          ; the item screen (Start, with Select's swap) is down too
+    BNE ItemLineBack                       ; the line waits while the game is paused or the item screen is down
     LDA FrameCounter
     LSR
     BCC ItemLineBack

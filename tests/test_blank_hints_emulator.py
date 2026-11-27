@@ -8,9 +8,6 @@ text's start, and the person's text still ends (the person's state moves on, as 
 toll's room ($14 of level 6) and level 9's entrance person ($60), whose texts are real, draw as
 before; the same ROM with ht-hint-07's bytes put back to the base's draws the stray tile; all of it
 on PRG0 and on PRG1 (bank 1 is the same in both). Other hint styles leave the patch out."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from functools import cache
 
 import pytest

@@ -27,6 +27,9 @@ QUIET = frozenset({Item.FIVE_RUPEES, Item.ITEM_0x18, Item.SINGLE_HEART, Item.FAI
 # Shown for half the time (3 seconds): bit 7 of the name's length.
 SHORT = frozenset({Item.BOMBS, Item.KEY, Item.MAP, Item.COMPASS})
 SHORT_BIT = 0x80
+# ItemLineLevel writes "NAME FOR Ln" (7 tiles more than the name) in the 24-tile row after "GOT ".
+LEVEL_NAME_CODES = frozenset(int(item) for item in (Item.COMPASS, Item.MAP, Item.TRIFORCE))
+LEVEL_NAME_TILES = 17
 
 
 def item_texts(pegasus_boots: bool = False) -> dict[int, str]:
@@ -56,6 +59,8 @@ def item_line_table(pegasus_boots: bool = False) -> bytes:
         tiles = encode(texts[code])[len(PREFIX):]   # the patch writes "GOT "
         if not tiles:
             raise ValueError(f"item code {code} has an empty name")     # the patch's loop would run 256 times
+        if code in LEVEL_NAME_CODES and len(tiles) > LEVEL_NAME_TILES:
+            raise ValueError(f"item code {code} has a {len(tiles)}-tile name; ItemLineLevel allows {LEVEL_NAME_TILES}")
         body += bytes([len(tiles) | (SHORT_BIT if code in SHORT else 0)]) + tiles
     table = bytes(low + high + body)
     if len(table) > TABLE_END - TABLE:

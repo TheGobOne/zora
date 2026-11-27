@@ -5,9 +5,6 @@ FP-OHKO-01). The steps' rules on scripted draws, the group pass's Zol rule (PS-E
 values in generated seeds, the patches' bytes against PRG0, the seed's code left alone while they
 are off, and in the emulator a beam fired short of full health, a death on the first hit and
 Ganon's hit points when he appears; then the November string itself generates."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from dataclasses import replace
 from functools import cache
 

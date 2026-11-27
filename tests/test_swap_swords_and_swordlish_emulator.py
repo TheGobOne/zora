@@ -7,9 +7,6 @@ FP-SWAP-02 and FP-SWAP-05; their Known open issues name these checks), on PRG0 a
   - the swap: the shop that sells the White Sword sells it at its ware's price; the magical-sword cave offers
     the Red Ring and still asks its hearts (refused one heart container short, given at the requirement); the
     Red Ring's old dungeon room holds the Magical Sword with its dark and sound bits."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from functools import cache
 
 import pytest

@@ -8,7 +8,7 @@ with the recompute of item-dependent outputs off:
   9. the exclusions and restrictions (R2) hold.
 """
 import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
+pytest.skip("stale: fails on Tetra's 2.0.2 build (renamed names and changed values); rewrite against 2.0.2 or mark the failing IDs", allow_module_level=True)
 
 import random
 from functools import cache, partial
@@ -17,7 +17,7 @@ import pytest
 
 import zora.generate.places as places_module
 from tests.archipelago_cases import FLAG_CASES
-from zora.generate.finish import FOREIGN, FOREIGN_ITEM, AssignmentRefused, Foreign, one_time_places, written_item
+from zora.generate.finish import FOREIGN, FOREIGN_ITEMS, AssignmentRefused, Foreign, one_time_places, written_item
 from zora.generate.pipeline import Built, build, finish, finish_world, plan
 from zora.generate.places import Place, PlaceKind, is_never_a_place, read_item
 from zora.generate.steps import move_last_boss_room_items
@@ -43,7 +43,7 @@ from zora.rom.layout import (
     LEVEL_7_9_DATA_ADDRESS_Q2,
     LEVEL_TABLE_SIZE,
 )
-from zora.rom.owner_patches import archipelago_patch_writes
+from zora.rom.owner_patches import archipelago_patch_offsets, archipelago_patch_writes
 from zora.rom.parse.rom_file import parse_rom
 
 SEEDS = (1, 2, 3, 4)
@@ -105,7 +105,7 @@ def item_byte_offsets() -> set[int]:
 
 ALLOWED_WITHOUT_RECOMPUTE = (item_byte_offsets() | set(range(SEED_CODE_ADDRESS, SEED_CODE_ADDRESS + SEED_CODE_LENGTH))
                              | set(range(ONE_TIME_WARES, ONE_TIME_WARES + ONE_TIME_WARES_SIZE))
-                             | {offset + i for offset, data in archipelago_patch_writes() for i in range(len(data))}
+                             | archipelago_patch_offsets()    # no base ROM needed at collection
                              | {ASM_NOTHING_CODE_PATCH_OFFSET}
                              # External mode stamps no seed number: the statistics screen's digits
                              # stay the player's ROM's (test 2)
@@ -161,7 +161,7 @@ def test_foreign_items_show_as_rupees(base: bytes) -> None:
     assignment = {place.name: FOREIGN for place in built.places}
     _, finished = finish_world_unchecked(built, assignment, recompute=False)
     parsed = parse_rom(finish_unchecked(built, base, assignment, recompute=False), reading(finished.config))
-    assert {read_item(parsed, place) for place in built.places} == {FOREIGN_ITEM}
+    assert {read_item(parsed, place) for place in built.places} == {FOREIGN_ITEMS[FOREIGN.item_class]}
 
 
 # --- test 9: exclusions and restrictions (R2) --------------------------------------------------

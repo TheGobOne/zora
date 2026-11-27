@@ -187,7 +187,8 @@ FIELDS: tuple[dict[str, Any], ...] = (
           "shop wares in the item shuffle. Totals over 9 show in hexadecimal (A = 10). Idea by Ultralavos.")),
         (ITEM_LINE_FIELD, "Show Item Pickups",
          ("The HUD's empty top row shows GOT and the item's name for about 6 seconds each time you take an "
-          "item, rupees, bombs, keys, hearts, fairies and clocks aside. Not offered in Archipelago, whose client "
+          "item, rupees, hearts, fairies and clocks aside; bombs, keys, maps and compasses show for half as long. "
+          "Not offered in Archipelago, whose client "
           "writes that row itself.")),
     )),
 )

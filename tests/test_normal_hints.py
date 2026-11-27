@@ -12,9 +12,6 @@ seeds:
   - ZORA's rule for a randomized maze (docs/deviations.md): its offer shows the path and costs 1.
   - Archipelago's FINISH keeps normal hints when it recomposes them.
   - ZORA keeps PRG0's text 0 for slot 0 and slot 36 (owner ruling: no greeting; deviations)."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from functools import cache
 
 import pytest

@@ -3,7 +3,7 @@ testing): the spare bait's fairy (Shop Items in the Item Pool with one hungry Go
 bait_in_pool), the logo look's shield fairies (finish.shields_to_fairies) and any joined ware the
 price classes reprice holding a fairy (shop_prices.PriceRules.prices, SI-PRICE-01)."""
 import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
+pytest.skip("stale: imports test_foreign_item_look, skipped for the retired logo look", allow_module_level=True)
 
 import copy
 

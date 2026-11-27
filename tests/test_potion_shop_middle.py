@@ -6,9 +6,6 @@ is sold once, while the shop's left blue potion stays a re-buyable ware.
     middle ware stays empty;
   - in the emulator: the middle ware is bought once (then gone, its bought bit set: Archipelago's
     check for it), and the left blue potion is bought again and again."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from copy import deepcopy
 from dataclasses import replace
 from functools import cache
@@ -22,7 +19,7 @@ from zora import archipelago
 from zora.flags import zora_flags
 from zora.flags.fields import ThreeState
 from zora.flags.presets import MVP_BASELINE_LEVEL_ENCODING_OFF
-from zora.generate.finish import FOREIGN_ITEM, Foreign
+from zora.generate.finish import FOREIGN, FOREIGN_ITEMS, Foreign
 from zora.generate.pipeline import Built, generate_rom
 from zora.generate.places import PlaceKind
 from zora.generate.steps.potion_shop import potion_shop
@@ -41,7 +38,7 @@ SEED = 1
 SHUFFLE_BLUE_POTION = zora_flags.encode(replace(zora_flags.DEFAULT, shuffle_blue_potion=ThreeState.ON))
 POTION_SHOP_BIT = 1 << SHOPS_BY_NUMBER.index(Destination.POTION_SHOP)
 INV_RAFT = ITEMS + 0x09
-ANY_ITEM = sorted({*ITEM_NAMES, FOREIGN_ITEM})
+ANY_ITEM = sorted({*ITEM_NAMES, FOREIGN_ITEMS[FOREIGN.item_class]})
 
 
 def one_time_bits(rom: bytes) -> list[bool]:

@@ -15,7 +15,7 @@ client's location check); a shop that sold the magical shield shows a fairy at i
 buying it takes that price and fills Link's hearts. With Progressive Items on, the White Sword Cave
 and a shop show another player's item and give it (its descriptor is no upgrade line)."""
 import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
+pytest.skip("stale: the magical-shield logo look and LOGO_SHOP_FAIRY_PRICES are gone in Tetra's 2.0.2 build; rewrite or retire", allow_module_level=True)
 
 from functools import cache
 

@@ -15,9 +15,6 @@ Archipelago's logic model that judge by it.
   - Level 9 Entrance = Level 4 sword (ZORA) needs Level 9 Entry at 8 triforces.
 The page's locks: tests/test_flag_form.py.
 Link meeting the entrance person: tests/test_level_9_entry_emulator.py."""
-import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
-
 from collections import Counter
 from dataclasses import replace
 from functools import cache

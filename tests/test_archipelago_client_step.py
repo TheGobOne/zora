@@ -15,7 +15,7 @@ the second file and plays it: every report is a place the loaded file has taken,
 made in play, and each file gets each server item once, its own items found in it counted, not
 given again."""
 import pytest
-pytest.skip("stale: imports a name Tetra's 2.0.2 build renamed or removed (FOREIGN_ITEM, MAGICAL_SHIELD); rewrite against 2.0.2", allow_module_level=True)
+pytest.skip("stale: fails on Tetra's 2.0.2 build (renamed names and changed values); rewrite against 2.0.2 or mark the failing IDs", allow_module_level=True)
 
 import json
 from dataclasses import dataclass, field, replace
