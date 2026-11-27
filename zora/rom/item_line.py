@@ -27,9 +27,9 @@ QUIET = frozenset({Item.FIVE_RUPEES, Item.ITEM_0x18, Item.SINGLE_HEART, Item.FAI
 # Shown for half the time (3 seconds): bit 7 of the name's length.
 SHORT = frozenset({Item.BOMBS, Item.KEY, Item.MAP, Item.COMPASS})
 SHORT_BIT = 0x80
-# ItemLineLevel writes "NAME FOR Ln" (7 tiles more than the name) in the 24-tile row after "GOT ".
+# ItemLineLevel writes "LEVEL n NAME" (8 tiles more than the name) in the 24-tile row after "GOT ".
 LEVEL_NAME_CODES = frozenset(int(item) for item in (Item.COMPASS, Item.MAP, Item.TRIFORCE))
-LEVEL_NAME_TILES = 17
+LEVEL_NAME_TILES = 16
 
 
 def item_texts(pegasus_boots: bool = False) -> dict[int, str]:

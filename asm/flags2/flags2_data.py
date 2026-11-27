@@ -189,16 +189,17 @@ PATCHES: dict[str, tuple[tuple[int, Piece], ...]] = {
         (0x06BFE, bytes.fromhex("85f0a412c005f00ba0808c0605")),
         (0x1750A, bytes.fromhex("f2")),
         (0x17DB9, bytes.fromhex("a90620acffad6d0660")),
-        (0x1A0AE, bytes.fromhex("20d5b1")),
-        (0x1B160, bytes.fromhex("24f23008a98085f2a9ff85f0a6f0e0fff050a9ff85f0e024b048bd64b2f0438501bd40b285002012b2"
-                                "a000b1000aa9b490014a85f1b100297f8502a91838e5024a186903aaa0fcb93ab19d0203e8c8d0f6c8"
-                                "b1009d0203e8c602d0f5a98185f2d014a5f1f012a5e0d00ea5154a9009c6f1d0052012b26868a027a9"
-                                "bd48a9ad48a9054cacffa5f24a9032a98085f2a200a9238d06208a1869c08d0620ad0720ad072029f0"
-                                "8500a9238d06208a1869c08d0620a5008d0720e8e008d0d4a2ff8e020360a9208d0203a9228d0303a9"
-                                "1c8d0403a9ff8d2103a91f8d0103a21ba9249d0503ca10fa6010181d24")),
-        (0x1BDBE, bytes.fromhex("4cb1bdad82fdc901d01fa5f0aae924901ba216c9089025e908a217c908901de90c9006a21bc9079013"
-                                "4c50b1a908e016f00ae017f006a907e01bd0eda8b9709d48a9ff85f0bd40b28500bd64b28501a000b1"
-                                "00297faac8b100992203cad0f7a2fac8bd3cbd992203e8d0f6c8689922038402a000b100298005028d"
-                                "2203a9228500a90385014c76b1240f181b2415")),
+        (0x1A0AE, bytes.fromhex("20d7b1")),
+        (0x1B160, bytes.fromhex("24f23008a98085f2a9ff85f0a6f0e0fff050a9ff85f0e024b048bd64b2f0438501bd40b2850020b1bd"
+                                "a000b1000aa9b490014a85f1b100297f8502a91838e5024a186903aaa0fcb922b19d0203e8c8d0f6c8"
+                                "b1009d0203e8c602d0f5a98185f2d016a5f1f014a5e005e1d00ea5154a9009c6f1d00520b1bd6868a0"
+                                "27a9bd48a9ad48a9054cacffa5f24a903ca98085f2a5ff29fb85ff8d0020a9238d0620a9c08d0620ad"
+                                "0720a207ad072029f09d0203ca10f5a9238d0620a9c08d0620a207bd02038d0720ca10f7a2ff8e0203"
+                                "6010181d24")),
+        (0x1BDBE, bytes.fromhex("4cd5bda9208d0203a9228d0303a91c8d0403a9ff8d2103a91f8d0103a21ba9249d0503ca10fa60ad82"
+                                "fdc901d01fa5f0aae924901ba216c9089025e908a217c908901de90c9006a21bc90790134c50b1a908"
+                                "e016f00ae017f006a907e01bd0eda8b9709d8d2903a9248d2a03a9ff85f0bd40b28500bd64b28501a2"
+                                "05bd5fbe9d2303ca10f7a000b100297faac8b100992a03cad0f7981869088502a000b100298005028d"
+                                "2203a9228500a90385014c76b1150e1f0e1524")),
     ),
 }

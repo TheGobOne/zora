@@ -3,9 +3,6 @@ blue one a cell in diagonally, and nothing else on the screen changed. Checked i
 (tests/emulator.py, cynes) with a registered file, so the death counts the guide's records follow are
 drawn too. It is a player setting (PlayerSettings.crop_guide, the page's Cosmetic tab), on by default: off
 puts the hook's two instructions back, and the corners are blank."""
-import pytest
-pytest.skip("stale: imports test_seed_code_icons, skipped for the retired MAGICAL_SHIELD logo", allow_module_level=True)
-
 from functools import cache
 
 import numpy as np

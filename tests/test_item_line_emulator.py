@@ -132,6 +132,20 @@ def test_the_line_waits_while_paused() -> None:
     assert emu.nametable(ROW, ROW_TILES) == BLANK
 
 
+def test_the_line_waits_while_the_item_screen_is_down() -> None:
+    """MenuState, not Paused, is set then (Select's swap leaves Start the only pause)."""
+    emu = enter(line_rom(), 0)              # the overworld: emulator.open_item_screen waits for its MenuState
+    emu[LATCH] = Item.RAFT
+    settle(emu, SHOW_FRAMES)
+    timer = emu[TIMER]
+    emu.open_item_screen()
+    settle(emu, GONE_FRAMES)
+    assert emu[TIMER] == timer
+    emu.close_item_screen()
+    settle(emu, GONE_FRAMES)
+    assert emu.nametable(ROW, ROW_TILES) == BLANK
+
+
 @pytest.mark.parametrize("code", [Item.FIVE_RUPEES, item_line.ITEM_CODES, NO_ITEM])
 def test_quiet_codes_show_nothing(code: int) -> None:
     emu = enter(line_rom(), 1)
@@ -210,7 +224,7 @@ def test_a_level_item_names_its_level(code: int, kind: str, level: int) -> None:
     emu = enter(rom, 1)
     emu[LATCH] = code
     settle(emu, SHOW_FRAMES)
-    assert emu.nametable(ROW, ROW_TILES) == row_for(f"GOT {kind} FOR L{rom[LEVEL_SHOWN + level - 1]}")
+    assert emu.nametable(ROW, ROW_TILES) == row_for(f"GOT LEVEL {rom[LEVEL_SHOWN + level - 1]} {kind}")
     assert emu[LATCH] == NO_ITEM
 
 

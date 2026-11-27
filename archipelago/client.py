@@ -183,6 +183,7 @@ class ZoraClient(BizHawkClient):
     HUD_SECONDS_BUSY = 5.0      # each message's time while HUD_BUSY_AT or more are pending
     HUD_BUSY_AT = 4             # pending messages, the one going up included: 3 or fewer get 10 s, more get 5 s
     HUD_REDRAW = 1.0            # written again this often while shown, in case a screen change wiped it
+    HUD_BURST_LINES = 10        # a burst of more items given back shows its count line, not each item
 
     def hud_on_package(self, ctx: BizHawkClientContext, cmd: str, args: dict) -> None:
         """Queue a HUD message for items this slot sent to other players (from on_package).
@@ -221,6 +222,9 @@ class ZoraClient(BizHawkClient):
                     self.hud_burst = True
                     n = seen - count + 1
                     self.hud_add(f"{n} ITEM GIVEN BACK" if n == 1 else f"{n} ITEMS GIVEN BACK", "back")
+                    self.hud_burst_quiet = n > self.HUD_BURST_LINES     # 500 lines would take 41 minutes
+                if self.hud_burst_quiet:
+                    return
             else:
                 self.hud_burst = False
                 if seed:
@@ -309,6 +313,7 @@ class ZoraClient(BizHawkClient):
     def hud_reset(self) -> None:
         self.hud_messages: list = []        # (text, kind): kind is a key of HUD_ORDER
         self.hud_burst = False              # items given again are being given; their line is queued
+        self.hud_burst_quiet = False        # this burst is over HUD_BURST_LINES: only its count line shows
         self.hud_text: str | None = None    # the message on screen now, or None
         self.hud_kind = ""                  # the kind of hud_text
         self.hud_until = 0.0
@@ -439,6 +444,12 @@ class ZoraClient(BizHawkClient):
         await self.zora_game_watcher(ctx)
         if ctx.server is not None and ctx.slot_data is not None:
             await self.hud_tick(ctx)
+        elif self.hud_dirty:            # the server dropped: blank the row, not leave a line up until reconnect
+            try:
+                if await self.hud_write(ctx, ""):
+                    self.hud_text, self.hud_dirty = None, False
+            except Exception:           # the HUD is optional; tried again next tick
+                pass
 
     async def set_auth(self, ctx: BizHawkClientContext) -> None:
         if self.ap_name:

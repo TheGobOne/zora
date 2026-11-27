@@ -1200,7 +1200,6 @@ tests/test_assignment.py::test_the_identity_assignment_gives_the_zora_mode_rom[w
 tests/test_console_play.py::test_the_patch_accepts_the_rom[False]
 tests/test_console_play.py::test_the_patch_accepts_the_rom[True]
 tests/test_console_play.py::test_the_speed_features_keep_their_hook
-tests/test_flags2_patches.py::test_module_matches_a_fresh_build
 tests/test_recompute.py::test_a_permuted_assignment_with_the_recompute[baseline-1]
 tests/test_recompute.py::test_a_permuted_assignment_with_the_recompute[baseline-2]
 tests/test_recompute.py::test_a_permuted_assignment_with_the_recompute[baseline-3]

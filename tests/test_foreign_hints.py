@@ -5,9 +5,6 @@ another player's item in turn: the white-sword cave (its requirement text and th
 text naming its item), the coast (the ladder requirement), the magical-sword cave (its own text),
 and the silver arrows' place (the level-9 trio's silver-arrow or arrow-upgrade text). ZORA mode's
 names are unaffected (verify.sh, the 32-ROM matrix)."""
-import pytest
-pytest.skip("stale: needs 2.0.2's names (FOREIGN_ITEM as one code, ItemNames.foreign_code); rewrite against FOREIGN_ITEMS and foreign_codes", allow_module_level=True)
-
 from dataclasses import replace
 
 import pytest
@@ -15,7 +12,7 @@ import pytest
 from tests.archipelago_cases import FLAG_CASES
 from tests.test_assignment import _built, identity
 from zora.generate.acceptance_check import ARROW_LINE
-from zora.generate.finish import FOREIGN, FOREIGN_ITEM, rebuild_tracking, with_tracking
+from zora.generate.finish import FOREIGN, FOREIGN_ITEMS, rebuild_tracking, with_tracking
 from zora.generate.pipeline import Built, finish_world
 from zora.generate.steps.hint_text import (
     FOREIGN_NAME,
@@ -45,6 +42,7 @@ SEEDS = (1, 2, 3)
 # The FINISH test's seeds: in every case at least one of them names a place holding another
 # player's item (seed 4 for second quest dungeons and universal drops in shapes, since the sword
 # caves' own texts speak only of hearts).
+FOREIGN_ITEM = FOREIGN_ITEMS[FOREIGN.item_class]     # a Foreign() value is filler
 FINISH_SEEDS = (1, 2, 3, 6)      # 6 for 4 after the hint pool edit of 2026-11-07: do not sort shapes says it
 
 
@@ -57,7 +55,7 @@ def base() -> bytes:
 
 def foreign_names(built: Built) -> ItemNames:
     names = PROGRESSIVE_NAMES if built.plan.zora.progressive_items else VANILLA_NAMES
-    return replace(names, foreign_code=FOREIGN_ITEM)
+    return replace(names, foreign_codes=frozenset({FOREIGN_ITEM.value}))
 
 
 def _says_foreign(lines: list[str]) -> bool:
@@ -157,7 +155,7 @@ def test_the_wording_fits_the_text_box() -> None:
     requirement text naming it keeps the wording whole on one line."""
     assert FOREIGN_NAME == "ANOTHER PLAYER'S ITEM"
     assert not quote_problems([FOREIGN_NAME]) and CHAR_TO_BYTE["'"] == APOSTROPHE_TILE
-    names = replace(VANILLA_NAMES, foreign_code=FOREIGN_ITEM)
+    names = replace(VANILLA_NAMES, foreign_codes=frozenset({FOREIGN_ITEM.value}))
     for form in ("raft", "recorder", "bracelet", "ladder"):
         for white_sword_cave in (False, True):
             lines = requirement_text(Requirement(form, FOREIGN_ITEM, white_sword_cave=white_sword_cave), names)
@@ -170,6 +168,5 @@ def test_the_apostrophe_is_vanillas_own(base: bytes) -> None:
 
 
 def test_zora_mode_names_are_unchanged() -> None:
-    """Without foreign_code (ZORA mode) the foreign code (a rupee) is named as ever."""
-    assert VANILLA_NAMES.foreign_code is None and PROGRESSIVE_NAMES.foreign_code is None
-    assert VANILLA_NAMES.phrase(FOREIGN_ITEM) == "THE RUPEE"
+    """Without foreign_codes (ZORA mode) no code is a foreign one (the Archipelago items have no ZORA name)."""
+    assert not VANILLA_NAMES.foreign_codes and not PROGRESSIVE_NAMES.foreign_codes

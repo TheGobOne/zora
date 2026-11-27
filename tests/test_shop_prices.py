@@ -263,20 +263,3 @@ def test_a_fairy_bought_in_a_zora_rom_refills_every_heart() -> None:
     assert rom[ITEM_ID_TO_DESCRIPTOR + FAIRY_ITEM] == DROPPED_FAIRY_DESCRIPTOR      # a dropped fairy: as PRG0
     assert _bought(rom, screen, position, Console) == (7, 7)
 
-
-@needs_base_rom
-def test_a_fairy_bought_in_an_archipelago_rom_refills_every_heart() -> None:
-    """The logo look's fairies (every real magical shield), on Archipelago's FINISH."""
-    from tests.test_assignment_emulator import Console
-    from tests.test_foreign_item_look import rom, shields_and_fairies
-    from zora.generate.finish import ForeignLook
-    from zora.generate.places import _screens
-    from zora.rom.parse.rom_file import parse_rom
-    image = rom(ForeignLook.LOGO)
-    world = parse_rom(image)
-    shields = {destination for destination, _ in shields_and_fairies(rom(ForeignLook.RUPEE))[0]}
-    shop, position = next((cave, index) for cave in world.overworld.caves if isinstance(cave, Shop)
-                          for index, ware in enumerate(cave.items)
-                          if ware.item == Item.FAIRY and cave.destination in shields)
-    assert all(image[offset:offset + len(data)] == data for offset, data in fairy_refill_writes())
-    assert _bought(image, _screens(world, shop.destination)[0], position, Console) == (7, 7)

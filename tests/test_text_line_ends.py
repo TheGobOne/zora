@@ -19,9 +19,6 @@ space), so a line can no longer end on one whatever its characters: a character 
 on each encoder with such lines; and (slow) on finished ROMs of every Archipelago flag case
 (tests/archipelago_cases.py, 94 varied settings), and on Archipelago's FINISH texts with another
 player's item in every cave place."""
-import pytest
-pytest.skip("stale: imports test_foreign_hints, skipped for its 2.0.2 renames", allow_module_level=True)
-
 import itertools
 from functools import cache
 

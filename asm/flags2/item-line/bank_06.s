@@ -102,7 +102,7 @@ ItemLineWrite:                      ; ItemLineLevel comes in here with Text at i
     LDA #ARMED|1
     STA ItemLineAttrReq             ; the NMI makes the top row's colours white
     ; The record is 28 tiles, so Tetra's NMI skips its 480-cycle glyph upload (under 25 bytes).
-    ; Under 20 tiles, ItemLineAttr's 503 cycles plus that upload would overrun vblank.
+    ; ItemLineAttr is about 290 cycles; with a record under 20 tiles it plus that upload would be near vblank's end.
     BNE ItemLineWritten
 
 ItemLineTick:
@@ -140,33 +140,38 @@ ItemLineAttr:
     BCC @Done
     LDA #ARMED
     STA ItemLineAttrReq
-    LDX #$00
-@Quadrant:
+    LDA CurPpuControl_2000          ; +1 increment: a vertical record may have left +32 (as fp-fix-03)
+    AND #$FB
+    STA CurPpuControl_2000
+    STA PpuControl_2000
     LDA #$23
     STA PpuAddr_2006
-    TXA
-    CLC
-    ADC #$C0
+    LDA #$C0
     STA PpuAddr_2006
     LDA PpuData_2007                ; the first read after a $2006 write is stale
-    LDA PpuData_2007
+    LDX #$07
+@Read:                              ; the buffer is transferred, so its first 8 bytes are free
+    LDA PpuData_2007                ; $23C0 first, kept at DynTileBuf+7
     AND #$F0                        ; the low nibble to palette 0
-    STA Text
+    STA DynTileBuf, X
+    DEX
+    BPL @Read
     LDA #$23
     STA PpuAddr_2006
-    TXA
-    CLC
-    ADC #$C0
+    LDA #$C0
     STA PpuAddr_2006
-    LDA Text
+    LDX #$07
+@Write:
+    LDA DynTileBuf, X               ; DynTileBuf+7 first: $23C0's byte
     STA PpuData_2007
-    INX
-    CPX #$08
-    BNE @Quadrant
+    DEX
+    BPL @Write
 @Done:
     LDX #$FF
     STX DynTileBuf
     RTS
+
+.SEGMENT "ZORA_F2_ITEM_LINE_LEVEL"     ; bank 6 too: ZORA_F2_ITEM_LINE has no room for it
 
 ; The row's record, all blank, alone in the dynamic buffer.
 ;
@@ -189,21 +194,23 @@ BlankRecord:
     BPL :-
     RTS
 
+.SEGMENT "ZORA_F2_ITEM_LINE"
+
 GotTiles:                           ; "GOT " in the font
     .BYTE $10, $18, $1D, $24
 
 .SEGMENT "ZORA_F2_ITEM_LINE_LEVEL"
 
 ; Per-level mode only (Triforce Shuffle, Map & Compass Shuffle): the codes $24-$3E, and the generic
-; compass and map (level 9's) and piece (level 8's). The line is the kind's own name from the table, then " FOR L"
-; and the number the status bar shows for that level: "GOT TRIFORCE FOR L4". The name is composed after the row's
+; compass and map (level 9's) and piece (level 8's). The line is "LEVEL", the number the status bar shows for that
+; level, then the kind's own name from the table: "GOT LEVEL 4 TRIFORCE". The name is composed after the row's
 ; record in DynTileBuf, then ItemLine writes it from its BlankRecord call. Any other code goes on to ItemLine.
-; shortcut: without ap-items this is the game's own byte ($E2 in PRG0, never 1); if a non-ap-items patch ever
+; shortcut: without ap-items this is the game's own byte ($94 in PRG0, never 1); if a non-ap-items patch ever
 ; writes 1 there, give the item line its own per-seed mode byte.
 ApItemsPerLevelMode := $FD82        ; bank 7: 1 in per-level mode, 0 without (zora/rom/level_items.py)
 PER_LEVEL_ON = $01
 LevelShown := $9D70                 ; bank 6: each data level's status-bar number 1-9 (zora/rom/level_items.py)
-LevelText := DynTileBuf+RECORD_END+1 ; up to 16 bytes, below OpenDoorwayMask ($33F)
+LevelText := DynTileBuf+RECORD_END+1 ; up to 25 bytes (a 16-tile name), below OpenDoorwayMask ($33F)
 COMPASS_CODE = $16
 MAP_CODE = $17
 TRIFORCE_CODE = $1B
@@ -211,7 +218,8 @@ FIRST_LEVEL_CODE = $24              ; compasses 1-8 $24-$2B, maps 1-8 $2C-$33, p
 KIND_LEVELS = 8
 TRIFORCE_GAP = 4                    ; $34-$37 are not level items
 TRIFORCE_LEVELS = 7
-SUFFIX_TILES = 6
+PREFIX_TILES = 6                    ; "LEVEL "
+NAME_AT = 1+PREFIX_TILES+2           ; LevelText: its length, "LEVEL ", the digit, a space, then the name
 
 ItemLineLevel:
     LDA ApItemsPerLevelMode
@@ -249,13 +257,21 @@ ItemLineLevel:
 @Level:                             ; A: the data level - 1; X: the kind's generic code
     TAY
     LDA LevelShown, Y
-    PHA
+    STA LevelText+1+PREFIX_TILES    ; the digit: the font's digit n is tile n
+    LDA #TILE_BLANK
+    STA LevelText+2+PREFIX_TILES
     LDA #NO_ITEM
     STA ItemLineLatch
     LDA ItemLineNames, X
     STA Text
     LDA ItemLineNames+ITEM_CODES, X
     STA Text+1                      ; the three generic codes always have a name
+    LDX #PREFIX_TILES-1
+:
+    LDA LevelPrefix, X
+    STA LevelText+1, X
+    DEX
+    BPL :-
     LDY #$00
     LDA (Text), Y
     AND #<~SHORT_BIT
@@ -263,20 +279,13 @@ ItemLineLevel:
 :
     INY
     LDA (Text), Y
-    STA LevelText, Y
+    STA LevelText+NAME_AT-1, Y
     DEX
     BNE :-
-    LDX #<-SUFFIX_TILES
-:
-    INY
-    LDA LevelSuffix-$100+SUFFIX_TILES, X ; X runs $FA-$FF
-    STA LevelText, Y
-    INX
-    BNE :-
-    INY
-    PLA
-    STA LevelText, Y                ; the digit: the font's digit n is tile n
-    STY TilesLeft
+    TYA
+    CLC
+    ADC #NAME_AT-1                  ; the line's length: the prefix, digit and space, then the name
+    STA TilesLeft
     LDY #$00
     LDA (Text), Y
     AND #SHORT_BIT                  ; maps and compasses keep the short time
@@ -288,5 +297,5 @@ ItemLineLevel:
     STA Text+1
     JMP ItemLineWrite
 
-LevelSuffix:                        ; " FOR L" in the font
-    .BYTE $24, $0F, $18, $1B, $24, $15
+LevelPrefix:                        ; "LEVEL " in the font
+    .BYTE $15, $0E, $1F, $0E, $15, $24

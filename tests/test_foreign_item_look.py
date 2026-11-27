@@ -1,22 +1,9 @@
-"""Other players' items look like (foreign_item_look; owner decision 2026-10-18; the spec "ZORA
-Archipelago beta 5 fixes", item 4): an Archipelago game's setting of the page's Multiworld mode.
-
-A rupee (the default): another player's item is written as one rupee ($18; five rupees, $0F, up to
-beta 5), and none of the logo's bytes is written. The Archipelago logo: it is written as the
-magical shield ($1C), drawn as the 16x16 logo from background tiles of its own (binarybrain11's
-art), whose take does nothing and whose palette is blue (zora/rom/archipelago_logo.py); every shop's
-real magical shield becomes a fairy priced 20-40, drawn from FINISH's stream, so the recipe rebuilds
-the same ROM.
-
-In the emulator, on the logo ROM: a room holding another player's item draws the logo's two 8x16
-halves side by side, unflipped, in the blue palette; taking it leaves the inventory as it was and
-sets the room's pickup flag (the
-client's location check); a shop that sold the magical shield shows a fairy at its new price, and
-buying it takes that price and fills Link's hearts. With Progressive Items on, the White Sword Cave
-and a shop show another player's item and give it (its descriptor is no upgrade line)."""
-import pytest
-pytest.skip("stale: the magical-shield logo look and LOGO_SHOP_FAIRY_PRICES are gone in Tetra's 2.0.2 build; rewrite or retire", allow_module_level=True)
-
+"""How another player's item looks (Archipelago; docs/design/archipelago-items.md piece 5): it is
+written as Item.ARCHIPELAGO_PROGRESSION / _USEFUL / _FILLER by its class (finish.FOREIGN_ITEMS),
+drawn as the 16x16 Archipelago logo from background tiles of its own (zora/rom/archipelago_logo.py)
+by asm/flags2/ap-items, and its take does nothing but set the room's pickup flag (the client's
+location check). The "Other players' items look like" setting, the magical-shield look and the
+shield-to-fairy swap are retired, so their tests are gone."""
 from functools import cache
 
 import pytest
@@ -27,7 +14,7 @@ from tests.test_assignment_emulator import CAVE_ITEM_IDS, HEART_VALUES, INV_RUPE
 from tests.test_progressive_emulator import NO_ITEM
 from zora import archipelago
 from zora.generate import pipeline
-from zora.generate.finish import FOREIGN, LOGO_SHOP_FAIRY_PRICES, ForeignLook
+from zora.generate.finish import FOREIGN, FOREIGN_CODES, FOREIGN_ITEMS
 from zora.generate.places import PlaceKind, _screens, read_item
 from zora.generate.steps.group_banks import OVERWORLD
 from zora.generate.steps.randomize_boss_groups import packed_slots
@@ -41,10 +28,8 @@ pytestmark = pytest.mark.skipif(not BASE_ROM_PATH.exists(), reason="needs the ba
 
 CASE = "every owner flag on"                 # shop wares joined, so a shop ware is a place
 SEED = 1
-LOOK = archipelago.PAGE_FOREIGN_ITEM_LOOK
+FOREIGN_CODE = FOREIGN_ITEMS[FOREIGN.item_class].value
 OAM_ENTRY = 4
-SPRITE_PALETTE_BITS = 0x03
-FAIRY = 0x23
 # The logo's two 8x16 sprites in OAM: tiles $5D and $5F (odd: the background table's $5C/$5D, $5E/$5F)
 LOGO_TILE_BYTES = set(archipelago_logo.LOGO_SPRITE_TILES)
 FLIP_BITS = 0xC0
@@ -77,51 +62,22 @@ def received() -> list[str]:
 
 
 @cache
-def rom(look: ForeignLook) -> bytes:
-    return archipelago.finish(result(), assignment(), received(), player_settings={LOOK: look.value})
-
-
-def shields_and_fairies(image: bytes) -> tuple[list[tuple[Destination, int]], list[int]]:
-    """Every shop ware holding the magical shield, and every fairy ware's price."""
-    world = parse_rom(image)
-    shops = [cave for cave in world.overworld.caves if isinstance(cave, Shop)]
-    shields = [(shop.destination, position) for shop in shops for position, ware in enumerate(shop.items)
-               if ware.item == Item.MAGICAL_SHIELD]
-    return shields, [ware.price for shop in shops for ware in shop.items if ware.item == Item.FAIRY]
+def rom() -> bytes:
+    return archipelago.finish(result(), assignment(), received())
 
 
 def written(image: bytes) -> bool:
     return all(image[offset:offset + len(data)] == data for offset, data in archipelago_logo.logo_writes())
 
 
-def test_the_rupee_look_writes_one_rupee_and_nothing_of_the_logo() -> None:
-    image = rom(ForeignLook.RUPEE)
+def test_another_players_item_is_written_by_its_class_and_the_logo_is_written() -> None:
+    image = rom()
     world = parse_rom(image)
     by_place = {place.name: place for place in result().state.places}
-    assert {read_item(world, by_place[name]) for name in foreign_places()} == {Item.ITEM_0x18}
-    for offset, data in archipelago_logo.logo_writes():
-        assert image[offset:offset + len(data)] == original_bytes(offset, len(data)), hex(offset)
-    assert rom(ForeignLook.RUPEE) == archipelago.finish(result(), assignment(), received())        # the default
-
-
-def test_the_logo_look_writes_the_shield_and_the_logo_and_sells_fairies() -> None:
-    image = rom(ForeignLook.LOGO)
-    world = parse_rom(image)
-    by_place = {place.name: place for place in result().state.places}
-    assert {read_item(world, by_place[name]) for name in foreign_places()} == {Item.MAGICAL_SHIELD}
-    assert written(image) and not written(rom(ForeignLook.RUPEE))
-    shields, _fairy_prices = shields_and_fairies(image)
-    foreign_ware = by_place[foreign_places()[1]]
-    assert shields == [(foreign_ware.destination, foreign_ware.position)]     # only the foreign one
-    real_shields, _ = shields_and_fairies(rom(ForeignLook.RUPEE))
-    assert real_shields
-    low, high = LOGO_SHOP_FAIRY_PRICES
-    for destination, position in real_shields:                               # each became a fairy
-        shop = world.overworld.get_cave(destination, Shop)
-        assert shop is not None
-        ware = shop.items[position]
-        assert ware.item == Item.FAIRY and low <= ware.price <= high, (destination, position)
-    recipe = archipelago.recipe(result(), assignment(), received(), player_settings={LOOK: "logo"})
+    codes = {read_item(world, by_place[name]) for name in foreign_places()}
+    assert {code.value for code in codes} == {FOREIGN_CODE} and FOREIGN_CODE in FOREIGN_CODES
+    assert written(image)
+    recipe = archipelago.recipe(result(), assignment(), received())
     assert recipe["formatVersion"] == archipelago.RECIPE_FORMAT_VERSION
     assert archipelago.rom_from_recipe(recipe, remember_repo_base_rom()) == image
 
@@ -143,14 +99,13 @@ def oam_records(console: Console) -> list[bytes]:
 def test_a_logo_pickup_draws_the_logo_gives_nothing_and_is_checked() -> None:
     room_place = next(place for place in result().state.places if place.name == foreign_places()[0])
     assert room_place.level is not None and room_place.room_num is not None
-    console = Console(rom(ForeignLook.LOGO))
+    console = Console(rom())
     console.enter_room(room_place.level, room_place.room_num)
     console.emu.run(PLAY_FRAMES)
     logo = sorted((record for record in oam_records(console) if record[1] in LOGO_TILE_BYTES and record[0] < HIDDEN_Y),
                   key=lambda record: record[3])
     assert [record[1] for record in logo] == list(archipelago_logo.LOGO_SPRITE_TILES)   # left, then right
     assert logo[1][3] - logo[0][3] == 8                                                 # side by side
-    assert all(record[2] & SPRITE_PALETTE_BITS == archipelago_logo.LOGO_PALETTE for record in logo)
     assert not any(record[2] & FLIP_BITS for record in logo)                            # not mirrored
     held = items_held(console)
     console.take_room_item()
@@ -159,48 +114,19 @@ def test_a_logo_pickup_draws_the_logo_gives_nothing_and_is_checked() -> None:
     assert check.is_set({check.address: console.emu[check.address]})
 
 
-def test_a_fairy_ware_sells_and_fills_the_hearts() -> None:
-    image = rom(ForeignLook.LOGO)
-    world = parse_rom(image)
-    shop, position = next((cave, index) for cave in world.overworld.caves if isinstance(cave, Shop)
-                          for index, ware in enumerate(cave.items) if ware.item == Item.FAIRY
-                          and cave.destination in {destination for destination, _ in
-                                                   shields_and_fairies(rom(ForeignLook.RUPEE))[0]})
-    price = shop.items[position].price
-    console = Console(image)
-    console.enter_cave(_screens(world, shop.destination)[0])
-    assert console.emu[CAVE_ITEM_IDS + position] & NO_ITEM == FAIRY
-    console.emu[HEART_VALUES] = SOME_HEARTS
-    rupees = console.emu[INV_RUPEES]
-    console.take_ware(position)
-    console.emu.run_until(lambda: console.emu[INV_RUPEES] == rupees - price, limit=RUPEE_COUNT_FRAMES)
-    assert console.emu[HEART_VALUES] & 0x0F == SOME_HEARTS >> 4
-
-
 # With Progressive Items on (this case's), fp-prog-01's ResolveProgressive hides a cave or shop ware
 # whose upgrade line is at its top level. Up to 2.0.1 the logo's descriptor was $20 (graded, value 0),
 # which it read as such a line, so another player's item showed as no item ($3F) in every cave and
 # shop and could not be taken. A class 1 descriptor is no upgrade, so the ware shows and sells.
-DESCRIPTOR_CLASS_BITS = 0xF0
-GRADED_CLASS = 0x20
 WHITE_SWORD_CAVE = "White Sword Cave"
 WHITE_SWORD_WARE = 1                         # the cave's middle ware
 TAKE_CHANGES = {INV_RUPEES, *range(inventory.SHOP_BOUGHT_FLAGS, inventory.SHOP_BOUGHT_FLAGS + 3)}
 
 
-def test_the_logo_is_no_upgrade_line() -> None:
-    assert result().state.plan.config.progressive_items                     # the case these tests need
-    descriptor = rom(ForeignLook.LOGO)[inventory.ITEM_ID_TO_DESCRIPTOR + archipelago_logo.MAGICAL_SHIELD]
-    assert descriptor == archipelago_logo.DO_NOTHING_DESCRIPTOR
-    assert descriptor & DESCRIPTOR_CLASS_BITS != GRADED_CLASS
-    assert descriptor & ~DESCRIPTOR_CLASS_BITS == 0                         # adds 0
-
-
 @cache
 def white_sword_cave_rom() -> bytes:
     own = by_name(result())
-    return archipelago.finish(result(), {**own, WHITE_SWORD_CAVE: FOREIGN}, [str(own[WHITE_SWORD_CAVE])],
-                              player_settings={LOOK: ForeignLook.LOGO.value})
+    return archipelago.finish(result(), {**own, WHITE_SWORD_CAVE: FOREIGN}, [str(own[WHITE_SWORD_CAVE])])
 
 
 def take_and_check(console: Console, name: str, position: int) -> None:
@@ -219,14 +145,14 @@ def test_with_progressive_items_the_white_sword_cave_shows_and_gives_the_logo() 
     cave = next(place for place in result().state.places if place.name == WHITE_SWORD_CAVE)
     console = Console(white_sword_cave_rom())
     console.enter_cave(cave.screens[0])
-    assert console.emu[CAVE_ITEM_IDS + WHITE_SWORD_WARE] & NO_ITEM == archipelago_logo.MAGICAL_SHIELD
+    assert console.emu[CAVE_ITEM_IDS + WHITE_SWORD_WARE] & NO_ITEM == FOREIGN_CODE
     console.emu.run(PLAY_FRAMES)
     assert any(record[1] in LOGO_TILE_BYTES and record[0] < HIDDEN_Y for record in oam_records(console))
     take_and_check(console, WHITE_SWORD_CAVE, WHITE_SWORD_WARE)
 
 
 def test_with_progressive_items_a_shop_sells_the_logo() -> None:
-    image = rom(ForeignLook.LOGO)
+    image = rom()
     ware = next(place for place in result().state.places if place.name == foreign_places()[1])
     assert ware.destination is not None and ware.position is not None
     world = parse_rom(image)
@@ -235,7 +161,7 @@ def test_with_progressive_items_a_shop_sells_the_logo() -> None:
     price = shop.items[ware.position].price
     console = Console(image)
     console.enter_cave(_screens(world, ware.destination)[0])
-    assert console.emu[CAVE_ITEM_IDS + ware.position] & NO_ITEM == archipelago_logo.MAGICAL_SHIELD
+    assert console.emu[CAVE_ITEM_IDS + ware.position] & NO_ITEM == FOREIGN_CODE
     rupees = console.emu[INV_RUPEES]
     take_and_check(console, ware.name, ware.position)
     console.emu.run_until(lambda: console.emu[INV_RUPEES] == rupees - price, limit=RUPEE_COUNT_FRAMES)
@@ -256,4 +182,4 @@ def test_the_bosses_never_take_the_logo_tiles_and_it_is_drawn_whole() -> None:
     assert built.plan.steps.randomize_boss_groups
     assert boss_tiles(built) <= set(range(0x30, 0x50))
     assert not boss_tiles(built) & set(archipelago_logo.LOGO_BACKGROUND_TILES)
-    assert written(rom(ForeignLook.LOGO))                                    # the whole logo's writes
+    assert written(rom())                                    # the whole logo's writes
