@@ -1,9 +1,9 @@
-ZORA 2.0.1 spoiler log
+ZORA 2.0.2 spoiler log
 ================================================================================
 Seed: 12345
 Flags: 8hq8GLVh80Vf2OzvNLiPtGiwrZUJ3A
 ZORA flags: 2.1B
-Seed code: Wooden Arrow, Shield, Wood Sword, Shield
+Seed code: Raft, Magical Key, Letter, Blue Ring
 Progressive Items is on: a sword, candle, arrow, ring or boomerang gives the
 next level of its line that you lack. Items are listed as the ROM holds them,
 with their line.
@@ -156,6 +156,7 @@ ZORA  Compass Chime ........................................................ off
 ZORA  Universal Drops v2.0 ................................................. off
 ZORA  Wizzrobes Shoot Wallmasters .......................................... off
 ZORA  Item Counter ......................................................... off
+ZORA  Bomb Upgrades in the Item Pool ....................................... off
 ZORA  Show Item Pickups .................................................... off
 
 ================================================================================
