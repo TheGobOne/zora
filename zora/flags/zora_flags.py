@@ -173,7 +173,18 @@ ITEM_COUNTER_FIELD = "item_counter"
 ITEM_COUNTER_FIELDS = (
     ITEM_COUNTER_FIELD,                    # the HUD counts the area's major-item places taken out of its total
 )
-# Version 23: Show Item Pickups, On / Off / ? like version 3's, a "?" decided by the same coins after version 22's.
+# Version 23: Add Triforces to the Item Pool and Add Maps/Compasses to the Item Pool (docs/design/
+# archipelago-items.md pieces 6 and 7), each On / Off / ?, Off by default, in single-player and in Multiworld
+# games. Either one resolved On puts the ROM in per-level mode (zora/model/level_items.py).
+ADD_TRIFORCES_FIELD = "add_triforces_to_pool"
+ADD_MAPS_COMPASSES_FIELD = "add_maps_compasses_to_pool"
+LEVEL_ITEM_POOL_FIELDS = (ADD_TRIFORCES_FIELD, ADD_MAPS_COMPASSES_FIELD)
+# Also version 23 (never released): Bomb Upgrades in the Item Pool (docs/design/archipelago-items.md piece 8), a
+# switch, Off by default, for Multiworld games only (MULTIWORLD_ONLY_FIELDS: the page shows it in Multiworld mode,
+# and a single-player ROM refuses it). The two bomb upgraders' rooms are places whose item each sells.
+BOMB_UPGRADES_FIELD = "bomb_upgrades_in_pool"
+MULTIWORLD_ONLY_FIELDS = frozenset({BOMB_UPGRADES_FIELD})
+# Version 24: Show Item Pickups, On / Off / ? like version 3's, a "?" decided by the same coins after version 22's.
 # Written by its asm/flags2 patch (zora/rom/owner_patches.py) with the texts of zora/rom/item_line.py: the status
 # bar's blank top row shows "GOT <item>" for each item Link takes. Archipelago holds it back (its client writes
 # the same row).
@@ -186,7 +197,7 @@ THREE_STATE_FIELDS = (*OWNER_2_0_FIELDS, *ZORA_1_0_FIELDS, *PEGASUS_BOOTS_FIELDS
                       *EXPANDED_DUNGEON_LOCATIONS_FIELDS, *HIGHLIGHT_NO_DROP_ROOMS_FIELDS,
                       *DO_NOT_SEGMENT_DUNGEONS_FIELDS, *FULL_HEALTH_FIELDS, *SWAP_SWORDS_AND_RINGS_FIELDS,
                       *COMPASS_CHIME_FIELDS, *UNIVERSAL_DROPS_V2_FIELDS, *WIZZROBE_HAND_FIELDS,
-                      *ITEM_COUNTER_FIELDS, *ITEM_LINE_FIELDS)
+                      *ITEM_COUNTER_FIELDS, *LEVEL_ITEM_POOL_FIELDS, *ITEM_LINE_FIELDS)
 
 
 
@@ -330,9 +341,13 @@ FIELDS: tuple[ZoraField, ...] = (
     # Version 22: Item Counter (ITEM_COUNTER_FIELDS), Off by default, so every older string keeps its meaning and
     # its spelling.
     *(ZoraField(name, THREE_STATE_SLOTS, version=22) for name in ITEM_COUNTER_FIELDS),
-    # Version 23: Show Item Pickups (ITEM_LINE_FIELDS), Off by default, so every older string keeps its meaning and
+    # Version 23: the level items' two pool switches (LEVEL_ITEM_POOL_FIELDS), Off by default, so every older
+    # string keeps its meaning and its spelling.
+    *(ZoraField(name, THREE_STATE_SLOTS, version=23) for name in LEVEL_ITEM_POOL_FIELDS),
+    ZoraField(BOMB_UPGRADES_FIELD, 2, version=23),
+    # Version 24: Show Item Pickups (ITEM_LINE_FIELDS), Off by default, so every older string keeps its meaning and
     # its spelling.
-    *(ZoraField(name, THREE_STATE_SLOTS, version=23) for name in ITEM_LINE_FIELDS),
+    *(ZoraField(name, THREE_STATE_SLOTS, version=24) for name in ITEM_LINE_FIELDS),
 )
 CURRENT_VERSION = max(field.version for field in FIELDS)
 VERSION_SEPARATOR = "."
@@ -418,7 +433,19 @@ class ZoraFlags:
     wizzrobes_shoot_wallmasters: ThreeState = ThreeState.OFF
     # Version 22: Item Counter, On / Off / ? (ITEM_COUNTER_FIELDS).
     item_counter: ThreeState = ThreeState.OFF
-    # Version 23: Show Item Pickups, On / Off / ? (ITEM_LINE_FIELDS).
+    # Version 23: Add Triforces to the Item Pool, Add Maps/Compasses to the Item Pool, On / Off / ?
+    # (LEVEL_ITEM_POOL_FIELDS).
+    add_triforces_to_pool: ThreeState = ThreeState.OFF
+    add_maps_compasses_to_pool: ThreeState = ThreeState.OFF
+    # Also version 23: Bomb Upgrades in the Item Pool (Multiworld only), a switch.
+    bomb_upgrades_in_pool: bool = False
+
+    @property
+    def per_level_items(self) -> bool:
+        """The ROM's per-level mode: each level's piece, map and compass has its own code (call on resolved
+        flags: a "?" is not on)."""
+        return any(self.is_on(name) for name in LEVEL_ITEM_POOL_FIELDS)
+    # Version 24: Show Item Pickups, On / Off / ? (ITEM_LINE_FIELDS).
     show_item_pickups: ThreeState = ThreeState.OFF
 
     def __post_init__(self) -> None:

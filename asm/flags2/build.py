@@ -80,12 +80,13 @@ PATCHES = (
     "dead-woods",               # 13 Randomize Dead Woods
     "pegasus-boots",            # Pegasus Boots (ZORA string version 7; owner spec 2026-10-17)
     "ring-color",               # Archipelago ROMs only: a ring given through RAM repaints Link
+    "hud-white-text",           # Archipelago ROMs only: HUD message row white over -LIFE-
     "full-health",              # Start With Full Health (credit: ShadowOne333, kalita-kun, gzip)
     "harder-ganon",             # Harder Ganon (credit: MetalMachine, Z1M1)
     "compass-chime",            # Compass Chime (ZORA version 18)
     "wizzrobe-hand",            # Wizzrobes Shoot Wallmasters (ZORA version 21; idea: Ultralavos)
     "item-counter",             # Item Counter (ZORA version 22; idea: Ultralavos)
-    "item-line",                # Show Item Pickups (ZORA version 23)
+    "item-line",                # Show Item Pickups (ZORA version 24)
 )
 
 # Community members who wrote a feature (the document's credits; docs/credits.md).

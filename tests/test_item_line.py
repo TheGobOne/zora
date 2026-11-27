@@ -31,7 +31,7 @@ def read_texts(table: bytes) -> dict[int, str]:
 
 def test_the_field_is_version_23_and_off_by_default() -> None:
     field = next(field for field in zora_flags.FIELDS if field.name == zora_flags.ITEM_LINE_FIELD)
-    assert field.version == 23
+    assert field.version == 24
     assert zora_flags.ZoraFlags().show_item_pickups is ThreeState.OFF
     assert zora_flags.decode(ON).show_item_pickups is ThreeState.ON
 
