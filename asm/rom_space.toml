@@ -725,6 +725,13 @@ first = 0xBDAE
 last = 0xBDB0
 
 [[slot]]
+segment = "ZORA_F2_ITEM_LINE_LEVEL"
+owner = "flags2:item-line"
+bank = 6
+first = 0xBDB1
+last = 0xBE7F
+
+[[slot]]
 segment = "ZORA_F2_BOOTS_ENDING"
 owner = "flags2:pegasus-boots"
 bank = 2

@@ -192,3 +192,45 @@ def test_a_cave_ware_lifts_as_before_and_shows(music: bool) -> None:
         pytest.fail("the row never named the ware")
     assert not console.emu.nes.has_crashed
     assert console.emu[ITEM_TYPE_TO_LIFT] == Item.BLUE_RING
+
+
+PER_LEVEL = zora_flags.encode(zora_flags.ZoraFlags(
+    show_item_pickups=ThreeState.ON, triforce_shuffle=zora_flags.LevelItemShuffle.ANYWHERE,
+    map_compass_shuffle=zora_flags.LevelItemShuffle.ANYWHERE))
+LEVEL_SHOWN = 0x19D80                   # bank 6 $9D70: each data level's status-bar number (zora/rom/level_items.py)
+
+
+@pytest.mark.parametrize(("code", "kind", "level"), [
+    (0x24, "COMPASS", 1), (0x2B, "COMPASS", 8), (0x2C, "MAP", 1), (0x33, "MAP", 8), (0x38, "TRIFORCE", 1),
+    (0x3B, "TRIFORCE", 4), (0x3E, "TRIFORCE", 7),
+    (Item.COMPASS, "COMPASS", 9), (Item.MAP, "MAP", 9), (Item.TRIFORCE, "TRIFORCE", 8)])
+def test_a_level_item_names_its_level(code: int, kind: str, level: int) -> None:
+    """Per-level mode: a level's own piece, map or compass says which level's it is, by the number shown."""
+    rom = line_rom(PER_LEVEL)
+    emu = enter(rom, 1)
+    emu[LATCH] = code
+    settle(emu, SHOW_FRAMES)
+    assert emu.nametable(ROW, ROW_TILES) == row_for(f"GOT {kind} FOR L{rom[LEVEL_SHOWN + level - 1]}")
+    assert emu[LATCH] == NO_ITEM
+
+
+@pytest.mark.parametrize("code", [0x34, 0x37, 0x3F])
+def test_codes_between_and_past_the_level_items_show_nothing(code: int) -> None:
+    emu = enter(line_rom(PER_LEVEL), 1)
+    emu[LATCH] = code
+    settle(emu, SHOW_FRAMES)
+    assert emu.nametable(ROW, ROW_TILES) == BLANK
+
+
+def test_the_generic_triforce_has_no_level_outside_per_level_mode() -> None:
+    emu = enter(line_rom(), 1)
+    emu[LATCH] = Item.TRIFORCE
+    settle(emu, SHOW_FRAMES)
+    assert emu.nametable(ROW, ROW_TILES) == row_for("GOT TRIFORCE")
+
+
+def test_a_level_map_keeps_the_short_time() -> None:
+    emu = enter(line_rom(PER_LEVEL), 1)
+    emu[LATCH] = 0x2C
+    settle(emu, SHOW_FRAMES + SHORT_FRAMES + 10)
+    assert emu.nametable(ROW, ROW_TILES) == BLANK

@@ -133,6 +133,8 @@ FREE_SPACE = {
     "ZORA_F2_ITEM_LINE": FreeSpace(6, 0xB150, 0xB23F),
     "ZORA_F2_ITEM_LINE_HOP_B5": FreeSpace(5, 0xBDA9, 0xBDB1),
     "ZORA_F2_ITEM_LINE_HOP_B6": FreeSpace(6, 0xBDAE, 0xBDB0),
+    # Per-level items' "FOR L<n>" (2026-11-27): after the bank 6 hop, $FF in every build.
+    "ZORA_F2_ITEM_LINE_LEVEL": FreeSpace(6, 0xBDB1, 0xBE7F),
 }
 
 

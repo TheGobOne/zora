@@ -236,7 +236,10 @@ PATCHES: dict[str, tuple[tuple[int, Piece], ...]] = {
                                 "bd48a9ad48a9054cacffa5f24a9032a98085f2a200a9238d06208a1869c08d0620ad0720ad072029f0"
                                 "8500a9238d06208a1869c08d0620a5008d0720e8e008d0d4a2ff8e020360a9208d0203a9228d0303a9"
                                 "1c8d0403a9ff8d2103a91f8d0103a21ba9249d0503ca10fa6010181d24")),
-        (0x1BDBE, bytes.fromhex("4c50b1")),
+        (0x1BDBE, bytes.fromhex("4cb1bdad82fdc901d01fa5f0aae924901ba216c9089025e908a217c908901de90c9006a21bc9079013"
+                                "4c50b1a908e016f00ae017f006a907e01bd0eda8b9709d48a9ff85f0bd40b28500bd64b28501a000b1"
+                                "00297faac8b100992203cad0f7a2fac8bd3cbd992203e8d0f6c8689922038402a000b100298005028d"
+                                "2203a9228500a90385014c76b1240f181b2415")),
     ),
     "level-compass": (
         (0x06A9F, bytes.fromhex("0620acff4c88adeaa90520acff98")),

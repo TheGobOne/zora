@@ -1,7 +1,7 @@
 .SEGMENT "ZORA_F2_ITEM_LINE_HOP_B6"
 
 ; Bank 5's ItemLineEnter lands here ($BDAE) when its SwitchBank returns.
-    JMP ItemLine
+    JMP ItemLineLevel
 
 .SEGMENT "ZORA_F2_ITEM_LINE"
 
@@ -43,24 +43,25 @@ TilesLeft := $02
 ;
 ItemLine:
     BIT ItemLineAttrReq
-    BMI @Armed
+    BMI ItemLineArmed
     LDA #ARMED                      ; the first call since ClearRam: its 0 in the latch is no item
     STA ItemLineAttrReq
     LDA #NO_ITEM
     STA ItemLineLatch
-@Armed:
+ItemLineArmed:
     LDX ItemLineLatch
     CPX #NO_ITEM
-    BEQ @Timer
+    BEQ ItemLineTick
     LDA #NO_ITEM
     STA ItemLineLatch
     CPX #ITEM_CODES
-    BCS @Timer                      ; not an item code
+    BCS ItemLineTick                      ; not an item code
     LDA ItemLineNames+ITEM_CODES, X
-    BEQ @Timer                      ; an item with no line
+    BEQ ItemLineTick                      ; an item with no line
     STA Text+1
     LDA ItemLineNames, X
     STA Text
+ItemLineWrite:                      ; ItemLineLevel comes in here with Text at its composed name
     JSR BlankRecord
 
     ; The show time: half with SHORT_BIT.
@@ -100,25 +101,25 @@ ItemLine:
     BNE :-
     LDA #ARMED|1
     STA ItemLineAttrReq             ; the NMI makes the top row's colours white
-    BNE @Written
+    BNE ItemLineWritten
 
-@Timer:
+ItemLineTick:
     LDA ItemLineTimer
-    BEQ @Back
+    BEQ ItemLineBack
     LDA Paused
-    BNE @Back                       ; the line waits while the game is paused
+    BNE ItemLineBack                       ; the line waits while the game is paused
     LDA FrameCounter
     LSR
-    BCC @Back
+    BCC ItemLineBack
     DEC ItemLineTimer
-    BNE @Back
+    BNE ItemLineBack
     JSR BlankRecord
 
-@Written:
+ItemLineWritten:
     PLA                             ; the hook's return: ItemLineTail's RTS goes to World_ChangeRupees' caller
     PLA
 
-@Back:
+ItemLineBack:
     LDY #WCR_SLOT_INDEX
     LDA #>(ItemLineTail-1)
     PHA
@@ -187,3 +188,102 @@ BlankRecord:
 
 GotTiles:                           ; "GOT " in the font
     .BYTE $10, $18, $1D, $24
+
+.SEGMENT "ZORA_F2_ITEM_LINE_LEVEL"
+
+; Per-level mode only (Triforce Shuffle, Map & Compass Shuffle): the codes $24-$3E, and the generic
+; compass and map (level 9's) and piece (level 8's). The line is the kind's own name from the table, then " FOR L"
+; and the number the status bar shows for that level: "GOT TRIFORCE FOR L4". The name is composed after the row's
+; record in DynTileBuf, then ItemLine writes it from its BlankRecord call. Any other code goes on to ItemLine.
+; shortcut: without ap-items this is the game's own byte ($E2 in PRG0, never 1); if a non-ap-items patch ever
+; writes 1 there, give the item line its own per-seed mode byte.
+ApItemsPerLevelMode := $FD82        ; bank 7: 1 in per-level mode, 0 without (zora/rom/level_items.py)
+PER_LEVEL_ON = $01
+LevelShown := $9D70                 ; bank 6: each data level's status-bar number 1-9 (zora/rom/level_items.py)
+LevelText := DynTileBuf+RECORD_END+1 ; up to 16 bytes, below OpenDoorwayMask ($33F)
+COMPASS_CODE = $16
+MAP_CODE = $17
+TRIFORCE_CODE = $1B
+FIRST_LEVEL_CODE = $24              ; compasses 1-8 $24-$2B, maps 1-8 $2C-$33, pieces 1-7 $38-$3E
+KIND_LEVELS = 8
+TRIFORCE_GAP = 4                    ; $34-$37 are not level items
+TRIFORCE_LEVELS = 7
+SUFFIX_TILES = 6
+
+ItemLineLevel:
+    LDA ApItemsPerLevelMode
+    CMP #PER_LEVEL_ON
+    BNE @Other                      ; C = 1 from here on when it is on
+    LDA ItemLineLatch
+    TAX
+    SBC #FIRST_LEVEL_CODE
+    BCC @Generic
+    LDX #COMPASS_CODE
+    CMP #KIND_LEVELS
+    BCC @Level
+    SBC #KIND_LEVELS
+    LDX #MAP_CODE
+    CMP #KIND_LEVELS
+    BCC @Level
+    SBC #KIND_LEVELS+TRIFORCE_GAP
+    BCC @Other
+    LDX #TRIFORCE_CODE
+    CMP #TRIFORCE_LEVELS
+    BCC @Level
+@Other:
+    JMP ItemLine
+
+@Generic:
+    LDA #9-1
+    CPX #COMPASS_CODE
+    BEQ @Level
+    CPX #MAP_CODE
+    BEQ @Level
+    LDA #8-1
+    CPX #TRIFORCE_CODE
+    BNE @Other
+
+@Level:                             ; A: the data level - 1; X: the kind's generic code
+    TAY
+    LDA LevelShown, Y
+    PHA
+    LDA #NO_ITEM
+    STA ItemLineLatch
+    LDA ItemLineNames, X
+    STA Text
+    LDA ItemLineNames+ITEM_CODES, X
+    STA Text+1                      ; the three generic codes always have a name
+    LDY #$00
+    LDA (Text), Y
+    AND #<~SHORT_BIT
+    TAX
+:
+    INY
+    LDA (Text), Y
+    STA LevelText, Y
+    DEX
+    BNE :-
+    LDX #<-SUFFIX_TILES
+:
+    INY
+    LDA LevelSuffix-$100+SUFFIX_TILES, X ; X runs $FA-$FF
+    STA LevelText, Y
+    INX
+    BNE :-
+    INY
+    PLA
+    STA LevelText, Y                ; the digit: the font's digit n is tile n
+    STY TilesLeft
+    LDY #$00
+    LDA (Text), Y
+    AND #SHORT_BIT                  ; maps and compasses keep the short time
+    ORA TilesLeft
+    STA LevelText
+    LDA #<LevelText
+    STA Text
+    LDA #>LevelText
+    STA Text+1
+    JMP ItemLineWrite
+
+LevelSuffix:                        ; " FOR L" in the font
+    .BYTE $24, $0F, $18, $1B, $24, $15

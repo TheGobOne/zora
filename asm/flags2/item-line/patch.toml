@@ -5,7 +5,9 @@
 # once it has checked that the dynamic buffer is free, calls bank 6's ItemLine, which writes the line (or the
 # blank when ItemLineTimer, $F1, runs out) and then leaves World_ChangeRupees for that frame. The texts are the
 # seed's table at bank 6 $B240 (asm/rom_space.toml site "item-line-names"; zora/rom/item_line.py). The power-on
-# clear reaches $F2, so no byte starts as garbage; ItemLine's first call sets the latch to $FF (no item). asm/README.md and asm/flags2/build.py describe this file.
+# clear reaches $F2, so no byte starts as garbage; ItemLine's first call sets the latch to $FF (no item). In
+# per-level mode (Triforce Shuffle, Map & Compass Shuffle) the hop goes to ItemLineLevel first, which names a level
+# item's level by the number the status bar shows: "GOT TRIFORCE FOR L4". asm/README.md and asm/flags2/build.py describe this file.
 
 [[segment]]
 name = "ZORA_F2_ITEM_LINE"
@@ -21,6 +23,11 @@ start = 0xBDA9              # after Compass Chime's code, which ends at $BDA8 (o
 name = "ZORA_F2_ITEM_LINE_HOP_B6"
 bank = 6
 start = 0xBDAE              # where bank 5's hop lands once SwitchBank puts bank 6 in
+
+[[segment]]
+name = "ZORA_F2_ITEM_LINE_LEVEL"
+bank = 6
+start = 0xBDB1              # after the hop: per-level items' "FOR L<n>" (unused $FF in every build, 2026-11-27)
 
 [imports]
 bank_01 = ["ItemLineEnter"]
